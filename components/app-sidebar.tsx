@@ -1,6 +1,18 @@
 "use client"
 
-import { Brain, MessageSquare, Network, Cpu, FileCode, Search, Users, Settings, Sparkles, Command } from "lucide-react"
+import {
+  Brain,
+  MessageSquare,
+  Network,
+  Cpu,
+  FileCode,
+  Search,
+  Users,
+  Settings,
+  Sparkles,
+  Command,
+  Dna,
+} from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -22,10 +34,16 @@ interface AppSidebarProps {
 
 const navigationItems = [
   {
-    title: "Command Center", // Added new command center option
+    title: "Command Center",
     icon: Command,
     view: "command" as ViewType,
     description: "Quantum AI control hub",
+  },
+  {
+    title: "iCRISPR Workbench",
+    icon: Dna,
+    view: "icrispr" as ViewType,
+    description: "DNA organism IDE",
   },
   {
     title: "Multi-Agent Chat",

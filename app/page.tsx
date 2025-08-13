@@ -15,6 +15,7 @@ import { NotificationCenter } from "@/components/ui/notification-center"
 import { Toaster } from "@/components/ui/toaster"
 import { OrganismConsciousness } from "@/components/cognitive/organism-consciousness"
 import { QuantumCommandCenter } from "@/components/command/quantum-command-center"
+import { ICRISPRWorkbench } from "@/components/workbench/icrispr-workbench"
 
 export type ViewType =
   | "chat"
@@ -26,6 +27,7 @@ export type ViewType =
   | "collaboration"
   | "organism-consciousness"
   | "command"
+  | "icrispr"
 
 export default function QuantumChatSwarmPilot() {
   const [activeView, setActiveView] = useState<ViewType>("command")
@@ -50,6 +52,8 @@ export default function QuantumChatSwarmPilot() {
         return <KnowledgeSearch />
       case "collaboration":
         return <CollaborationPanel />
+      case "icrispr":
+        return <ICRISPRWorkbench />
       default:
         return <QuantumCommandCenter />
     }
