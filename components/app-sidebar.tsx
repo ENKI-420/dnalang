@@ -12,6 +12,8 @@ import {
   Sparkles,
   Command,
   Dna,
+  Heart,
+  Smartphone,
 } from "lucide-react"
 import {
   Sidebar,
@@ -44,6 +46,18 @@ const navigationItems = [
     icon: Dna,
     view: "icrispr" as ViewType,
     description: "DNA organism IDE",
+  },
+  {
+    title: "Healthcare Dashboard",
+    icon: Heart,
+    view: "healthcare" as ViewType,
+    description: "Clinical decision support",
+  },
+  {
+    title: "QNET Mobile",
+    icon: Smartphone,
+    view: "mobile" as ViewType,
+    description: "Quantum consciousness mobile",
   },
   {
     title: "Multi-Agent Chat",

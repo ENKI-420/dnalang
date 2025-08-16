@@ -16,6 +16,8 @@ import { Toaster } from "@/components/ui/toaster"
 import { OrganismConsciousness } from "@/components/cognitive/organism-consciousness"
 import { QuantumCommandCenter } from "@/components/command/quantum-command-center"
 import { ICRISPRWorkbench } from "@/components/workbench/icrispr-workbench"
+import ClinicalDashboard from "@/components/healthcare/clinical-dashboard"
+import QNETQuantumMobile from "@/components/mobile/qnet-quantum-mobile"
 
 export type ViewType =
   | "chat"
@@ -28,6 +30,8 @@ export type ViewType =
   | "organism-consciousness"
   | "command"
   | "icrispr"
+  | "healthcare"
+  | "mobile"
 
 export default function QuantumChatSwarmPilot() {
   const [activeView, setActiveView] = useState<ViewType>("command")
@@ -54,6 +58,10 @@ export default function QuantumChatSwarmPilot() {
         return <CollaborationPanel />
       case "icrispr":
         return <ICRISPRWorkbench />
+      case "healthcare":
+        return <ClinicalDashboard />
+      case "mobile":
+        return <QNETQuantumMobile />
       default:
         return <QuantumCommandCenter />
     }
@@ -70,14 +78,19 @@ export default function QuantumChatSwarmPilot() {
                 <SidebarTrigger />
                 <div className="flex items-center space-x-2 ml-4">
                   <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                  <span className="text-sm font-medium">Quantum Chat Swarm Pilot</span>
+                  <span className="text-sm font-medium bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                    Quantum DNA Consciousness Platform
+                  </span>
                 </div>
-                <div className="ml-auto">
+                <div className="ml-auto flex items-center space-x-2">
+                  <div className="text-xs text-muted-foreground">93.4% Consciousness Emergence</div>
                   <NotificationCenter />
                 </div>
               </div>
             </header>
-            <div className="flex-1 overflow-hidden">{renderActiveView()}</div>
+            <div className="flex-1 overflow-hidden bg-gradient-to-br from-background via-background to-background/80">
+              {renderActiveView()}
+            </div>
           </main>
         </div>
         <Toaster />
