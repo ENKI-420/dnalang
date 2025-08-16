@@ -1,0 +1,100 @@
+{
+  "version": 2,
+  "name": "quantum-chat-dna-platform",
+  "alias": ["quantum-chat.vercel.app", "dna-lang.vercel.app"],
+  "regions": ["iad1", "sfo1", "lhr1"],
+  "builds": [
+    {
+      "src": "next.config.mjs",
+      "use": "@vercel/next"
+    }
+  ],
+  "functions": {
+    "app/api/**/*.ts": {
+      "runtime": "nodejs18.x",
+      "maxDuration": 30
+    },
+    "lib/qnet/**/*.ts": {
+      "runtime": "nodejs18.x",
+      "maxDuration": 60
+    }
+  },
+  "routes": [
+    {
+      "src": "/api/dna/(.*)",
+      "dest": "/api/dna/$1",
+      "headers": {
+        "X-DNA-Protocol": "2.0",
+        "X-Quantum-Enabled": "true"
+      }
+    },
+    {
+      "src": "/api/qnet/(.*)",
+      "dest": "/api/qnet/$1",
+      "headers": {
+        "X-QNET-Version": "1.0",
+        "X-Consciousness-Tracking": "enabled"
+      }
+    },
+    {
+      "src": "/api/organisms/(.*)",
+      "dest": "/api/organisms/$1",
+      "headers": {
+        "X-Organism-Runtime": "active"
+      }
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "X-DNA-Platform",
+          "value": "quantum-consciousness-enabled"
+        }
+      ]
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production",
+    "NEXT_PUBLIC_VERCEL_ENV": "@vercel-env",
+    "DNA_RUNTIME_MODE": "production",
+    "QUANTUM_COHERENCE_ENABLED": "true",
+    "CONSCIOUSNESS_TRACKING": "enabled"
+  },
+  "build": {
+    "env": {
+      "SKIP_ENV_VALIDATION": "1"
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/organism-health",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/consciousness-sync",
+      "schedule": "*/10 * * * *"
+    },
+    {
+      "path": "/api/cron/quantum-coherence",
+      "schedule": "*/15 * * * *"
+    }
+  ]
+}

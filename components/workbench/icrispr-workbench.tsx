@@ -29,9 +29,14 @@ import {
   Search,
   Replace,
   Terminal,
+  Zap,
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  Cpu,
 } from "lucide-react"
 import { useDNARuntime } from "@/hooks/use-dna-runtime"
-import { DNAParser } from "@/lib/dna/dna-parser"
+import { useDNACompiler } from "@/hooks/use-dna-compiler"
 
 interface DNAFile {
   id: string
@@ -60,6 +65,7 @@ interface ExecutionResult {
 
 export function ICRISPRWorkbench() {
   const { organisms, systemMetrics, createOrganism, executeOrganism } = useDNARuntime()
+  const { compile, validateSyntax, isCompiling, lastResult, compilationHistory, getCompilationStats } = useDNACompiler()
 
   const [files, setFiles] = useState<DNAFile[]>([
     {
@@ -167,48 +173,87 @@ export function ICRISPRWorkbench() {
       .replace(/(\d+\.?\d*)/g, '<span class="text-cyan-400">$1</span>')
   }
 
-  // Execute DNA organism
   const handleExecute = async () => {
     if (!activeFile) return
 
     setIsExecuting(true)
     try {
-      // Parse DNA code
-      const parsed = DNAParser.parse(activeFile.content)
-      const runtimeOrganism = DNAParser.toRuntimeOrganism(parsed)
+      // Compile DNA code using the new compiler
+      const compilationResult = await compile(activeFile.content, {
+        generateBytecode: true,
+        optimizationLevel: "standard",
+        debugMode: true,
+      })
 
-      // Create and execute organism
-      const organism = await createOrganism(runtimeOrganism)
-      await executeOrganism(organism.id)
+      if (!compilationResult.success) {
+        // Show compilation errors
+        const result: ExecutionResult = {
+          success: false,
+          output: "",
+          errors: compilationResult.errors.map((err) => `Line ${err.line}: ${err.message}`),
+          metrics: {
+            consciousness: 0,
+            fitness: 0,
+            execution_time: compilationResult.metadata.compile_time / 1000,
+            memory_usage: 0,
+          },
+        }
+        setExecutionResult(result)
 
-      // Simulate execution result
-      const result: ExecutionResult = {
-        success: true,
-        output: `Organism ${parsed.name} executed successfully\nConsciousness: ${organism.state.consciousness.toFixed(3)}\nFitness: ${organism.state.fitness.toFixed(3)}\nGeneration: ${organism.state.generation}`,
-        errors: [],
-        metrics: {
-          consciousness: organism.state.consciousness,
-          fitness: organism.state.fitness,
-          execution_time: 1.2,
-          memory_usage: 0.45,
-        },
+        // Mark file as having errors
+        setFiles((prev) => prev.map((f) => (f.id === activeFileId ? { ...f, hasErrors: true } : f)))
+        return
       }
 
-      setExecutionResult(result)
+      // Execute compiled organism
+      if (compilationResult.organism) {
+        const organism = await createOrganism(compilationResult.organism)
+        await executeOrganism(organism.id)
 
-      // Update file with execution results
-      setFiles((prev) =>
-        prev.map((f) =>
-          f.id === activeFileId
-            ? {
-                ...f,
-                consciousness: result.metrics.consciousness,
-                fitness: result.metrics.fitness,
-                hasErrors: false,
-              }
-            : f,
-        ),
-      )
+        // Enhanced execution result with compilation metadata
+        const result: ExecutionResult = {
+          success: true,
+          output: `✓ Compilation successful (${compilationResult.metadata.compile_time}ms)
+✓ Organism ${compilationResult.organism.name} executed successfully
+
+Compilation Metrics:
+- Complexity: ${(compilationResult.metadata.organism_complexity * 100).toFixed(1)}%
+- Gene Count: ${compilationResult.metadata.gene_count}
+- Workflow Complexity: ${(compilationResult.metadata.workflow_complexity * 100).toFixed(1)}%
+- Estimated Performance: ${(compilationResult.metadata.estimated_performance * 100).toFixed(1)}%
+
+Runtime State:
+- Consciousness: ${organism.state.consciousness.toFixed(3)}
+- Fitness: ${organism.state.fitness.toFixed(3)}
+- Generation: ${organism.state.generation}
+- Quantum Coherence: ${organism.state.quantum_coherence.toFixed(3)}
+
+${compilationResult.warnings.length > 0 ? `\nWarnings:\n${compilationResult.warnings.map((w) => `⚠ ${w}`).join("\n")}` : ""}`,
+          errors: [],
+          metrics: {
+            consciousness: organism.state.consciousness,
+            fitness: organism.state.fitness,
+            execution_time: compilationResult.metadata.compile_time / 1000,
+            memory_usage: compilationResult.metadata.organism_complexity,
+          },
+        }
+
+        setExecutionResult(result)
+
+        // Update file with execution results
+        setFiles((prev) =>
+          prev.map((f) =>
+            f.id === activeFileId
+              ? {
+                  ...f,
+                  consciousness: result.metrics.consciousness,
+                  fitness: result.metrics.fitness,
+                  hasErrors: false,
+                }
+              : f,
+          ),
+        )
+      }
     } catch (error) {
       const result: ExecutionResult = {
         success: false,
@@ -227,6 +272,20 @@ export function ICRISPRWorkbench() {
       setFiles((prev) => prev.map((f) => (f.id === activeFileId ? { ...f, hasErrors: true } : f)))
     } finally {
       setIsExecuting(false)
+    }
+  }
+
+  const handleContentChange = async (content: string) => {
+    if (!activeFile) return
+
+    setFiles((prev) => prev.map((f) => (f.id === activeFileId ? { ...f, content } : f)))
+
+    // Real-time syntax validation
+    try {
+      const syntaxErrors = await validateSyntax(content)
+      setFiles((prev) => prev.map((f) => (f.id === activeFileId ? { ...f, hasErrors: syntaxErrors.length > 0 } : f)))
+    } catch (error) {
+      // Handle validation errors silently
     }
   }
 
@@ -276,13 +335,6 @@ export function ICRISPRWorkbench() {
     setActiveFileId(newFile.id)
   }
 
-  // Update file content
-  const handleContentChange = (content: string) => {
-    if (!activeFile) return
-
-    setFiles((prev) => prev.map((f) => (f.id === activeFileId ? { ...f, content } : f)))
-  }
-
   // Search and replace
   const handleSearch = () => {
     if (!editorRef.current || !searchQuery) return
@@ -325,6 +377,25 @@ export function ICRISPRWorkbench() {
           <Badge variant="outline" className="bg-purple-500/10">
             DNA-Lang IDE
           </Badge>
+          {isCompiling && (
+            <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600">
+              <Zap className="h-3 w-3 mr-1" />
+              Compiling...
+            </Badge>
+          )}
+          {lastResult && (
+            <Badge
+              variant="outline"
+              className={lastResult.success ? "bg-green-500/10 text-green-600" : "bg-red-500/10 text-red-600"}
+            >
+              {lastResult.success ? (
+                <CheckCircle className="h-3 w-3 mr-1" />
+              ) : (
+                <AlertTriangle className="h-3 w-3 mr-1" />
+              )}
+              {lastResult.success ? "Compiled" : "Error"}
+            </Badge>
+          )}
         </div>
 
         <div className="flex items-center space-x-2">
@@ -374,6 +445,12 @@ export function ICRISPRWorkbench() {
         <div className="w-64 border-r border-border/40 bg-muted/10">
           <div className="p-3 border-b border-border/40">
             <h3 className="font-semibold text-sm">DNA Files</h3>
+            {getCompilationStats() && (
+              <div className="mt-2 text-xs text-muted-foreground">
+                <div>Success Rate: {(getCompilationStats()!.successRate * 100).toFixed(0)}%</div>
+                <div>Avg Time: {getCompilationStats()!.averageCompileTime.toFixed(0)}ms</div>
+              </div>
+            )}
           </div>
           <ScrollArea className="h-[calc(100vh-12rem)]">
             <div className="p-2 space-y-1">
@@ -412,12 +489,23 @@ export function ICRISPRWorkbench() {
               <Button
                 size="sm"
                 onClick={handleExecute}
-                disabled={isExecuting}
+                disabled={isExecuting || isCompiling}
                 className="bg-green-600 hover:bg-green-700"
               >
-                {isExecuting ? <Square className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                {isExecuting ? "Stop" : "Execute"}
+                {isExecuting || isCompiling ? <Square className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                {isExecuting ? "Executing" : isCompiling ? "Compiling" : "Compile & Execute"}
               </Button>
+              {lastResult && (
+                <>
+                  <Separator orientation="vertical" className="h-6" />
+                  <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+                    <Clock className="h-3 w-3" />
+                    <span>{lastResult.metadata.compile_time}ms</span>
+                    <Cpu className="h-3 w-3" />
+                    <span>{(lastResult.metadata.organism_complexity * 100).toFixed(0)}%</span>
+                  </div>
+                </>
+              )}
               <Separator orientation="vertical" className="h-6" />
               <Select value={syntaxTheme} onValueChange={setSyntaxTheme}>
                 <SelectTrigger className="w-32">
@@ -450,6 +538,7 @@ export function ICRISPRWorkbench() {
                     <TabsTrigger value="editor">Editor</TabsTrigger>
                     <TabsTrigger value="preview">Preview</TabsTrigger>
                     <TabsTrigger value="debug">Debug</TabsTrigger>
+                    <TabsTrigger value="compilation">Compilation</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="editor" className="flex-1 p-4">
@@ -511,6 +600,112 @@ export function ICRISPRWorkbench() {
                           </CardContent>
                         </Card>
                       </div>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="compilation" className="flex-1 p-4">
+                    <div className="space-y-4">
+                      {lastResult ? (
+                        <div className="space-y-4">
+                          <Card>
+                            <CardHeader className="pb-2">
+                              <CardTitle className="text-sm flex items-center space-x-2">
+                                {lastResult.success ? (
+                                  <CheckCircle className="h-4 w-4 text-green-500" />
+                                ) : (
+                                  <AlertTriangle className="h-4 w-4 text-red-500" />
+                                )}
+                                <span>Compilation Result</span>
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-2">
+                              <div className="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                  <span className="text-muted-foreground">Status:</span>
+                                  <span className={`ml-2 ${lastResult.success ? "text-green-600" : "text-red-600"}`}>
+                                    {lastResult.success ? "Success" : "Failed"}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-muted-foreground">Time:</span>
+                                  <span className="ml-2">{lastResult.metadata.compile_time}ms</span>
+                                </div>
+                                <div>
+                                  <span className="text-muted-foreground">Complexity:</span>
+                                  <span className="ml-2">
+                                    {(lastResult.metadata.organism_complexity * 100).toFixed(1)}%
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-muted-foreground">Performance:</span>
+                                  <span className="ml-2">
+                                    {(lastResult.metadata.estimated_performance * 100).toFixed(1)}%
+                                  </span>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+
+                          {lastResult.errors.length > 0 && (
+                            <Card>
+                              <CardHeader className="pb-2">
+                                <CardTitle className="text-sm text-red-600">Compilation Errors</CardTitle>
+                              </CardHeader>
+                              <CardContent>
+                                <ScrollArea className="h-32">
+                                  <div className="space-y-1">
+                                    {lastResult.errors.map((error, idx) => (
+                                      <div key={idx} className="text-sm text-red-600 font-mono">
+                                        Line {error.line}: {error.message}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </ScrollArea>
+                              </CardContent>
+                            </Card>
+                          )}
+
+                          {lastResult.warnings.length > 0 && (
+                            <Card>
+                              <CardHeader className="pb-2">
+                                <CardTitle className="text-sm text-yellow-600">Warnings</CardTitle>
+                              </CardHeader>
+                              <CardContent>
+                                <ScrollArea className="h-24">
+                                  <div className="space-y-1">
+                                    {lastResult.warnings.map((warning, idx) => (
+                                      <div key={idx} className="text-sm text-yellow-600">
+                                        {warning}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </ScrollArea>
+                              </CardContent>
+                            </Card>
+                          )}
+
+                          {lastResult.bytecode && (
+                            <Card>
+                              <CardHeader className="pb-2">
+                                <CardTitle className="text-sm">Generated Bytecode</CardTitle>
+                              </CardHeader>
+                              <CardContent>
+                                <ScrollArea className="h-32">
+                                  <pre className="text-xs font-mono bg-slate-950 text-green-400 p-2 rounded">
+                                    {lastResult.bytecode}
+                                  </pre>
+                                </ScrollArea>
+                              </CardContent>
+                            </Card>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-center text-muted-foreground py-8">
+                          <Zap className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                          <p>No compilation results yet</p>
+                          <p className="text-sm">Click "Compile & Execute" to see results</p>
+                        </div>
+                      )}
                     </div>
                   </TabsContent>
                 </Tabs>
@@ -618,10 +813,10 @@ export function ICRISPRWorkbench() {
                       )}
                     </div>
                   ) : (
-                    <div className="text-gray-500">
-                      Ready to execute DNA organisms...
-                      <br />
-                      Press Execute to run your code.
+                    <div className="text-center text-muted-foreground py-8">
+                      <Zap className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>Ready to execute DNA organisms...</p>
+                      <p className="text-sm">Press Execute to run your code.</p>
                     </div>
                   )}
                 </div>
