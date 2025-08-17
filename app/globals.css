@@ -4,36 +4,81 @@
 
 @layer base {
   :root {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 210 40% 98%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 217.2 91.2% 59.8%;
+    /* Updated to refined rose-based color palette from design brief for premium feel */
+    --background: 0 0% 100%;
+    --foreground: 215 16% 47%;
+    --card: 327 73% 97%;
+    --card-foreground: 215 16% 47%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 16% 47%;
+    --primary: 347 77% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 327 73% 97%;
+    --secondary-foreground: 215 16% 47%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 215 25% 27%;
+    --accent: 330 81% 60%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 347 77% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 13% 91%;
+    --input: 327 73% 97%;
+    --ring: 347 77% 50%;
     --radius: 0.5rem;
 
-    /* Sidebar specific colors */
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 0 0% 98%;
-    --sidebar-primary-foreground: 240 5.9% 10%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Enhanced chart colors for quantum data visualization with rose theme */
+    --chart-1: 347 77% 50%;
+    --chart-2: 330 81% 60%;
+    --chart-3: 45 93% 47%;
+    --chart-4: 262 83% 58%;
+    --chart-5: 347 87% 43%;
+
+    /* Updated sidebar colors to match new rose theme */
+    --sidebar-background: 327 73% 97%;
+    --sidebar-foreground: 215 16% 47%;
+    --sidebar-primary: 347 77% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 330 81% 60%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 347 77% 50%;
+
+    /* Added quantum-specific design tokens for enhanced theming with rose palette */
+    --quantum-glow: 330 81% 60%;
+    --consciousness-primary: 347 77% 50%;
+    --dna-helix: 330 81% 60%;
+    --neural-network: 45 93% 47%;
+  }
+
+  .dark {
+    /* Added dark mode support with rose-based dark theme */
+    --background: 224 71% 4%;
+    --foreground: 213 31% 91%;
+    --card: 224 71% 4%;
+    --card-foreground: 213 31% 91%;
+    --popover: 224 71% 4%;
+    --popover-foreground: 213 31% 91%;
+    --primary: 347 77% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 215 27% 17%;
+    --secondary-foreground: 213 31% 91%;
+    --muted: 215 27% 17%;
+    --muted-foreground: 217 10% 65%;
+    --accent: 330 81% 60%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 213 31% 91%;
+    --border: 215 27% 17%;
+    --input: 215 27% 17%;
+    --ring: 347 77% 50%;
+    --sidebar-background: 224 71% 4%;
+    --sidebar-foreground: 213 31% 91%;
+    --sidebar-primary: 347 77% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 330 81% 60%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 215 27% 17%;
+    --sidebar-ring: 347 77% 50%;
   }
 }
 
@@ -43,18 +88,202 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Enhanced quantum-inspired background pattern with rose tones */
+    background-image: radial-gradient(circle at 25% 25%, hsl(330 81% 60% / 0.03) 0%, transparent 50%),
+      radial-gradient(circle at 75% 75%, hsl(347 77% 50% / 0.03) 0%, transparent 50%);
   }
 }
 
-/* Custom progress bar indicator color */
-.progress-indicator-blue {
-  background-color: hsl(217.2 91.2% 59.8%); /* Example blue */
+/* Enhanced progress indicators with new rose quantum theme colors */
+.progress-indicator-quantum {
+  background: linear-gradient(90deg, hsl(347 77% 50%), hsl(330 81% 60%));
 }
 
-.progress-indicator-purple {
-  background-color: hsl(270 80% 60%); /* Example purple */
+.progress-indicator-consciousness {
+  background: linear-gradient(90deg, hsl(330 81% 60%), hsl(45 93% 47%));
 }
 
-.progress-indicator-green {
-  background-color: hsl(142.1 76.2% 36.3%); /* Example green */
+.progress-indicator-dna {
+  background: linear-gradient(90deg, hsl(45 93% 47%), hsl(347 77% 50%));
+}
+
+/* Added sophisticated glass morphism and quantum animation effects with rose theme */
+.glass-morphism {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.quantum-gradient-primary {
+  background: linear-gradient(135deg, hsl(347 77% 50%), hsl(330 81% 60%));
+}
+
+.interactive-element {
+  transition: all 0.2s ease-in-out;
+}
+
+.interactive-element:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.card-hover {
+  transition: all 0.2s ease-in-out;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.focus-ring {
+  @apply focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+}
+
+.page-transition {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, hsl(327 73% 97%) 25%, hsl(220 13% 91%) 50%, hsl(327 73% 97%) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes quantum-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes consciousness-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes dna-helix-rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes neural-network-pulse {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.quantum-pulse {
+  animation: quantum-pulse 2s ease-in-out infinite;
+}
+
+.consciousness-flow {
+  background: linear-gradient(-45deg, hsl(347 77% 50%), hsl(330 81% 60%), hsl(45 93% 47%), hsl(347 77% 50%));
+  background-size: 400% 400%;
+  animation: consciousness-flow 3s ease infinite;
+}
+
+.dna-helix-rotate {
+  animation: dna-helix-rotate 4s linear infinite;
+}
+
+.neural-network-pulse {
+  animation: neural-network-pulse 2s ease-in-out infinite;
+}
+
+/* Added premium micro-interactions and enhanced visual effects */
+.premium-card {
+  @apply glass-morphism rounded-xl border border-border/20 shadow-lg;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.premium-card:hover {
+  @apply shadow-2xl;
+  transform: translateY(-4px) scale(1.02);
+  border-color: hsl(var(--primary) / 0.3);
+}
+
+.quantum-button {
+  @apply relative overflow-hidden;
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+}
+
+.quantum-button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.quantum-button:hover::before {
+  left: 100%;
+}
+
+.consciousness-indicator {
+  position: relative;
+  overflow: hidden;
+}
+
+.consciousness-indicator::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent 30%, hsl(var(--primary) / 0.1) 50%, transparent 70%);
+  animation: consciousness-sweep 2s infinite;
+}
+
+@keyframes consciousness-sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }

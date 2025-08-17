@@ -25,7 +25,10 @@ export interface OrganismDeployment {
 export class QNETIntegration {
   private nodes: Map<string, QNETNode> = new Map()
   private deployments: Map<string, OrganismDeployment> = new Map()
-  private supabase = createClient(process.env.SUPABASE_SUPABASE_URL || "", process.env.SUPABASE_SUPABASE_ANON_KEY || "")
+  private supabase = createClient(
+    process.env.SUPABASE_SUPABASE_NEXT_PUBLIC_SUPABASE_URL || "",
+    process.env.SUPABASE_NEXT_PUBLIC_SUPABASE_ANON_KEY_ANON_KEY || "",
+  )
 
   constructor() {
     this.initializeNetwork()

@@ -1,10 +1,29 @@
 import { neon } from "@neondatabase/serverless"
 
-const sql = neon(process.env.DATABASE_URL!)
+const sql = process.env.DATABASE_URL ? neon(process.env.DATABASE_URL) : null
 
 export class NeonDataManager {
+  private isAvailable = !!process.env.DATABASE_URL
+
+  constructor() {
+    if (!this.isAvailable) {
+      console.warn("[NeonDataManager] DATABASE_URL not found, using simulation mode")
+    }
+  }
+
   // Agent Execution Management
   async createExecution(userInput: string) {
+    if (!this.isAvailable || !sql) {
+      console.log("[NeonDataManager] Simulating execution creation")
+      return {
+        id: Math.random().toString(36).substr(2, 9),
+        user_input: userInput,
+        status: "simulated",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+    }
+
     try {
       const result = await sql`
         INSERT INTO agent_executions (user_input, status, created_at, updated_at)
@@ -19,6 +38,16 @@ export class NeonDataManager {
   }
 
   async getExecutions(limit = 50) {
+    if (!this.isAvailable || !sql) {
+      console.log("[NeonDataManager] Returning simulated executions")
+      return Array.from({ length: Math.min(limit, 5) }, (_, i) => ({
+        id: `sim-${i}`,
+        user_input: `Simulated execution ${i + 1}`,
+        status: "completed",
+        created_at: new Date(Date.now() - i * 60000).toISOString(),
+      }))
+    }
+
     try {
       const result = await sql`
         SELECT * FROM agent_executions 
@@ -40,6 +69,11 @@ export class NeonDataManager {
     average_circuit_depth: number
     raw_json: any
   }) {
+    if (!this.isAvailable || !sql) {
+      console.log("[NeonDataManager] Simulating telemetry storage")
+      return true
+    }
+
     try {
       await sql`
         INSERT INTO telemetry_data (

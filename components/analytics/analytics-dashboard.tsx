@@ -30,19 +30,11 @@ import {
   PolarRadiusAxis,
   Radar,
 } from "recharts"
-import {
-  TrendingUp,
-  TrendingDown,
-  Activity,
-  Users,
-  Clock,
-  AlertTriangle,
-  CheckCircle,
-  RefreshCw,
-  Download,
-} from "lucide-react"
+import { Activity, Users, Clock, AlertTriangle, CheckCircle, RefreshCw, Download } from "lucide-react"
 import { useDataPersistence } from "@/hooks/use-data-persistence"
 import { useAgentOrchestration } from "@/hooks/use-agent-orchestration"
+import { systemMonitor } from "@/lib/monitoring/system-monitor"
+import { performanceMonitor } from "@/lib/performance/performance-monitor"
 
 interface AnalyticsData {
   timestamp: string
@@ -77,7 +69,6 @@ export function AnalyticsDashboard() {
     systemHealth: 95,
   })
 
-  // Generate mock time series data for demonstration
   useEffect(() => {
     const generateTimeSeriesData = () => {
       const now = new Date()
@@ -97,13 +88,20 @@ export function AnalyticsDashboard() {
                     : 86400000 * 30),
         )
 
+        // Use real performance metrics instead of random data
+        const systemLoad = performanceMonitor.getAverageMetric("cpu_usage", 60000) || 0
+        const memoryUsage = performanceMonitor.getAverageMetric("heap_used", 60000) || 0
+        const networkRtt = performanceMonitor.getAverageMetric("network_rtt", 60000) || 0
+        const apiResponse = performanceMonitor.getAverageMetric("api_response", 60000) || 0
+
         data.push({
           timestamp: timestamp.toISOString(),
-          systemLoad: Math.random() * 100,
-          agentUtilization: 60 + Math.random() * 30,
-          taskThroughput: 10 + Math.random() * 50,
-          errorRate: Math.random() * 5,
-          responseTime: 100 + Math.random() * 200,
+          systemLoad: systemLoad,
+          agentUtilization:
+            agents.length > 0 ? (agents.filter((a) => a.status === "active").length / agents.length) * 100 : 0,
+          taskThroughput: stats.completed || 0,
+          errorRate: stats.total > 0 ? (stats.failed / stats.total) * 100 : 0,
+          responseTime: apiResponse || 0,
         })
       }
 
@@ -111,12 +109,11 @@ export function AnalyticsDashboard() {
     }
 
     generateTimeSeriesData()
-    const interval = setInterval(generateTimeSeriesData, 30000) // Update every 30 seconds
+    const interval = setInterval(generateTimeSeriesData, 30000)
 
     return () => clearInterval(interval)
-  }, [timeRange])
+  }, [timeRange, agents, stats])
 
-  // Generate agent performance data
   useEffect(() => {
     const performanceData: AgentPerformanceData[] = agents.map((agent) => ({
       agentId: agent.id,
@@ -125,20 +122,28 @@ export function AnalyticsDashboard() {
       successRate: agent.performance.successRate * 100,
       efficiency: agent.performance.efficiency * 100,
       tasksCompleted: agent.performance.tasksCompleted,
-      averageTime: Math.random() * 1000 + 500, // Mock average time
+      averageTime: agent.performance.averageResponseTime || 0,
     }))
 
     setAgentPerformanceData(performanceData)
   }, [agents])
 
-  // Update real-time metrics
   useEffect(() => {
     const updateRealTimeMetrics = () => {
+      const healthStatus = systemMonitor.getHealthStatus()
+
       setRealTimeMetrics({
-        activeUsers: Math.floor(Math.random() * 100) + 50,
-        totalRequests: stats.total + Math.floor(Math.random() * 1000),
-        averageResponseTime: Math.floor(Math.random() * 200) + 100,
-        systemHealth: 90 + Math.random() * 10,
+        activeUsers: healthStatus.metrics.activeUsers,
+        totalRequests: stats.total,
+        averageResponseTime: healthStatus.metrics.responseTime,
+        systemHealth:
+          healthStatus.overall === "healthy"
+            ? 95
+            : healthStatus.overall === "warning"
+              ? 75
+              : healthStatus.overall === "critical"
+                ? 45
+                : 25,
       })
     }
 
@@ -147,6 +152,48 @@ export function AnalyticsDashboard() {
 
     return () => clearInterval(interval)
   }, [stats])
+
+  const handleRefresh = async () => {
+    try {
+      // Trigger system health check
+      const healthStatus = systemMonitor.getHealthStatus()
+
+      // Update metrics from real sources
+      setRealTimeMetrics({
+        activeUsers: healthStatus.metrics.activeUsers,
+        totalRequests: stats.total,
+        averageResponseTime: healthStatus.metrics.responseTime,
+        systemHealth:
+          healthStatus.overall === "healthy"
+            ? 95
+            : healthStatus.overall === "warning"
+              ? 75
+              : healthStatus.overall === "critical"
+                ? 45
+                : 25,
+      })
+    } catch (error) {
+      console.error("[v0] Failed to refresh analytics data:", error)
+    }
+  }
+
+  const handleExport = () => {
+    const exportData = {
+      timestamp: new Date().toISOString(),
+      metrics: realTimeMetrics,
+      agents: agentPerformanceData,
+      tasks: stats,
+      analytics: analyticsData,
+    }
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `analytics-export-${new Date().toISOString().split("T")[0]}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
 
   const formatTime = (timestamp: string) => {
     const date = new Date(timestamp)
@@ -207,11 +254,11 @@ export function AnalyticsDashboard() {
               </Button>
             ))}
           </div>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleExport}>
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleRefresh}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
@@ -226,9 +273,9 @@ export function AnalyticsDashboard() {
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Active Users</p>
                 <p className="text-2xl font-bold">{realTimeMetrics.activeUsers}</p>
-                <p className="text-xs text-green-500 flex items-center mt-1">
-                  <TrendingUp className="h-3 w-3 mr-1" />
-                  +12% from last hour
+                <p className="text-xs text-muted-foreground flex items-center mt-1">
+                  <Activity className="h-3 w-3 mr-1" />
+                  Live system data
                 </p>
               </div>
               <Users className="h-8 w-8 text-blue-500" />
@@ -242,9 +289,9 @@ export function AnalyticsDashboard() {
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Total Requests</p>
                 <p className="text-2xl font-bold">{realTimeMetrics.totalRequests.toLocaleString()}</p>
-                <p className="text-xs text-green-500 flex items-center mt-1">
-                  <TrendingUp className="h-3 w-3 mr-1" />
-                  +8% from yesterday
+                <p className="text-xs text-muted-foreground flex items-center mt-1">
+                  <Activity className="h-3 w-3 mr-1" />
+                  From database
                 </p>
               </div>
               <Activity className="h-8 w-8 text-green-500" />
@@ -258,9 +305,9 @@ export function AnalyticsDashboard() {
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Avg Response Time</p>
                 <p className="text-2xl font-bold">{realTimeMetrics.averageResponseTime}ms</p>
-                <p className="text-xs text-red-500 flex items-center mt-1">
-                  <TrendingDown className="h-3 w-3 mr-1" />
-                  +5ms from last hour
+                <p className="text-xs text-muted-foreground flex items-center mt-1">
+                  <Clock className="h-3 w-3 mr-1" />
+                  Performance monitor
                 </p>
               </div>
               <Clock className="h-8 w-8 text-yellow-500" />

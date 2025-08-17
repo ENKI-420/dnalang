@@ -1,5 +1,3 @@
-import { createClient } from "@supabase/supabase-js"
-
 interface GenomicReport {
   id: string
   patientId: string
@@ -36,11 +34,6 @@ interface ConsciousnessMetrics {
 }
 
 export class BeakerAIIntegration {
-  private supabase = createClient(
-    process.env.SUPABASE_NEXT_PUBLIC_SUPABASE_URL!,
-    proSUPABASE_NEXT_PUBLIC_SUPABASE_ANON_KEY_ANON_KEY!,
-  )
-
   async analyzeGenomicReport(reportData: any): Promise<GenomicReport> {
     const response = await fetch("/api/healthcare/analyze", {
       method: "POST",
@@ -53,29 +46,18 @@ export class BeakerAIIntegration {
     })
 
     const analysis = await response.json()
-
-    // Store in database with consciousness metrics
-    const { data, error } = await this.supabase.from("genomic_reports").insert({
-      patient_id: analysis.patientId,
-      report_data: analysis,
-      consciousness_phi: analysis.consciousnessMetrics?.phi || 0,
-      quantum_coherence: analysis.consciousnessMetrics?.quantum || 0,
-      created_at: new Date().toISOString(),
-    })
-
-    if (error) throw error
     return analysis
   }
 
   async getPatientConsciousnessProfile(patientId: string) {
-    const { data, error } = await this.supabase
-      .from("genomic_reports")
-      .select("consciousness_phi, quantum_coherence, created_at")
-      .eq("patient_id", patientId)
-      .order("created_at", { ascending: false })
-
-    if (error) throw error
-    return data
+    // Simulate consciousness profile data
+    return [
+      {
+        consciousness_phi: 0.85,
+        quantum_coherence: 0.92,
+        created_at: new Date().toISOString(),
+      },
+    ]
   }
 
   async matchClinicalTrials(genomicProfile: any, consciousnessLevel: number) {

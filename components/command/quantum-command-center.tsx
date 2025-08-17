@@ -21,41 +21,132 @@ import {
   Pie,
   Cell,
 } from "recharts"
-
-// Mock real-time data
-const generateRealtimeData = () => ({
-  agentCount: Math.floor(Math.random() * 50) + 100,
-  activeConnections: Math.floor(Math.random() * 200) + 500,
-  messagesPerSecond: Math.floor(Math.random() * 100) + 50,
-  systemLoad: Math.floor(Math.random() * 30) + 40,
-  quantumCoherence: Math.floor(Math.random() * 20) + 80,
-  securityLevel: Math.floor(Math.random() * 10) + 90,
-})
-
-const performanceData = Array.from({ length: 20 }, (_, i) => ({
-  time: `${i}:00`,
-  cpu: Math.floor(Math.random() * 40) + 30,
-  memory: Math.floor(Math.random() * 30) + 50,
-  network: Math.floor(Math.random() * 50) + 25,
-}))
-
-const agentDistribution = [
-  { name: "Cognitive", value: 35, color: "#2563eb" },
-  { name: "Analytical", value: 28, color: "#0ea5e9" },
-  { name: "Creative", value: 22, color: "#06b6d4" },
-  { name: "Orchestrator", value: 15, color: "#0891b2" },
-]
+import { useAgentOrchestration } from "@/hooks/use-agent-orchestration"
+import { useDataPersistence } from "@/hooks/use-data-persistence"
+import { systemMonitor } from "@/lib/monitoring/system-monitor"
+import { performanceMonitor } from "@/lib/performance/performance-monitor"
+import { qnetIntegration } from "@/lib/qnet/qnet-integration"
 
 export function QuantumCommandCenter() {
-  const [realtimeData, setRealtimeData] = useState(generateRealtimeData())
+  const { agents, metrics, tasks } = useAgentOrchestration()
+  const { stats } = useDataPersistence()
+  const [realtimeData, setRealtimeData] = useState({
+    agentCount: 0,
+    activeConnections: 0,
+    messagesPerSecond: 0,
+    systemLoad: 0,
+    quantumCoherence: 0,
+    securityLevel: 0,
+  })
+  const [performanceData, setPerformanceData] = useState<
+    Array<{
+      time: string
+      cpu: number
+      memory: number
+      network: number
+    }>
+  >([])
   const [isActive, setIsActive] = useState(true)
+  const [systemHealth, setSystemHealth] = useState<any>(null)
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setRealtimeData(generateRealtimeData())
-    }, 2000)
+    const updateRealtimeData = () => {
+      const healthStatus = systemMonitor.getHealthStatus()
+      const networkStatus = qnetIntegration.getNetworkStatus()
+      const activeAgents = agents.filter((agent) => agent.status === "active")
+
+      setRealtimeData({
+        agentCount: agents.length,
+        activeConnections: networkStatus.activeConnections || activeAgents.length * 2,
+        messagesPerSecond: networkStatus.messagesPerSecond || Math.floor(stats.completed / 60),
+        systemLoad: performanceMonitor.getAverageMetric("cpu_usage", 60000) || healthStatus.metrics.systemLoad,
+        quantumCoherence: networkStatus.networkHealth || 85,
+        securityLevel:
+          healthStatus.components.security.status === "healthy"
+            ? 95
+            : healthStatus.components.security.status === "warning"
+              ? 75
+              : 45,
+      })
+
+      setSystemHealth(healthStatus)
+    }
+
+    updateRealtimeData()
+    const interval = setInterval(updateRealtimeData, 2000)
+    return () => clearInterval(interval)
+  }, [agents, stats])
+
+  useEffect(() => {
+    const generatePerformanceData = () => {
+      const now = new Date()
+      const data = []
+
+      for (let i = 19; i >= 0; i--) {
+        const time = new Date(now.getTime() - i * 60000)
+        data.push({
+          time: time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          cpu: performanceMonitor.getAverageMetric("cpu_usage", 60000) || 0,
+          memory: performanceMonitor.getAverageMetric("heap_used", 60000) || 0,
+          network: performanceMonitor.getAverageMetric("network_rtt", 60000) || 0,
+        })
+      }
+
+      setPerformanceData(data)
+    }
+
+    generatePerformanceData()
+    const interval = setInterval(generatePerformanceData, 60000) // Update every minute
     return () => clearInterval(interval)
   }, [])
+
+  const agentDistribution = agents.reduce(
+    (acc, agent) => {
+      const type = agent.capabilities[0]?.type || "general"
+      const existing = acc.find((item) => item.name === type)
+      if (existing) {
+        existing.value += 1
+      } else {
+        acc.push({
+          name: type,
+          value: 1,
+          color: `hsl(${acc.length * 60}, 70%, 50%)`,
+        })
+      }
+      return acc
+    },
+    [] as Array<{ name: string; value: number; color: string }>,
+  )
+
+  const handleSystemToggle = async () => {
+    try {
+      if (isActive) {
+        // Pause system operations
+        console.log("[v0] Putting system into standby mode")
+        // In a real system, this would pause agent operations
+      } else {
+        // Resume system operations
+        console.log("[v0] Activating system operations")
+        // In a real system, this would resume agent operations
+      }
+      setIsActive(!isActive)
+    } catch (error) {
+      console.error("[v0] Failed to toggle system state:", error)
+    }
+  }
+
+  const getHealthColor = (status: string) => {
+    switch (status) {
+      case "healthy":
+        return "text-green-400"
+      case "warning":
+        return "text-yellow-400"
+      case "critical":
+        return "text-red-400"
+      default:
+        return "text-gray-400"
+    }
+  }
 
   return (
     <div className="h-full w-full bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-6 overflow-auto">
@@ -70,10 +161,10 @@ export function QuantumCommandCenter() {
           </div>
           <div className="flex items-center space-x-4">
             <Badge variant={isActive ? "default" : "secondary"} className="px-4 py-2">
-              <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse mr-2" />
+              <div className={`w-2 h-2 rounded-full ${isActive ? "bg-green-400 animate-pulse" : "bg-gray-400"} mr-2`} />
               {isActive ? "ACTIVE" : "STANDBY"}
             </Badge>
-            <Button onClick={() => setIsActive(!isActive)} className="bg-blue-600 hover:bg-blue-700 text-white">
+            <Button onClick={handleSystemToggle} className="bg-blue-600 hover:bg-blue-700 text-white">
               {isActive ? "Standby" : "Activate"}
             </Button>
           </div>
@@ -110,7 +201,7 @@ export function QuantumCommandCenter() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-400 text-sm">Messages/sec</p>
+                <p className="text-slate-400 text-sm">Tasks/min</p>
                 <p className="text-2xl font-bold text-green-400">{realtimeData.messagesPerSecond}</p>
               </div>
               <MessageSquare className="h-8 w-8 text-green-400" />
@@ -123,7 +214,7 @@ export function QuantumCommandCenter() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-slate-400 text-sm">System Load</p>
-                <p className="text-2xl font-bold text-yellow-400">{realtimeData.systemLoad}%</p>
+                <p className="text-2xl font-bold text-yellow-400">{realtimeData.systemLoad.toFixed(1)}%</p>
               </div>
               <Gauge className="h-8 w-8 text-yellow-400" />
             </div>
@@ -134,8 +225,8 @@ export function QuantumCommandCenter() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-400 text-sm">Quantum Coherence</p>
-                <p className="text-2xl font-bold text-purple-400">{realtimeData.quantumCoherence}%</p>
+                <p className="text-slate-400 text-sm">Network Health</p>
+                <p className="text-2xl font-bold text-purple-400">{realtimeData.quantumCoherence.toFixed(1)}%</p>
               </div>
               <Zap className="h-8 w-8 text-purple-400" />
             </div>
@@ -147,7 +238,7 @@ export function QuantumCommandCenter() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-slate-400 text-sm">Security Level</p>
-                <p className="text-2xl font-bold text-red-400">{realtimeData.securityLevel}%</p>
+                <p className="text-2xl font-bold text-red-400">{realtimeData.securityLevel.toFixed(1)}%</p>
               </div>
               <Shield className="h-8 w-8 text-red-400" />
             </div>
@@ -226,75 +317,85 @@ export function QuantumCommandCenter() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={agentDistribution}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={120}
-                      paddingAngle={5}
-                      dataKey="value"
-                    >
-                      {agentDistribution.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
+                {agentDistribution.length > 0 ? (
+                  <>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <PieChart>
+                        <Pie
+                          data={agentDistribution}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={120}
+                          paddingAngle={5}
+                          dataKey="value"
+                        >
+                          {agentDistribution.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "#1e293b",
+                            border: "1px solid #334155",
+                            borderRadius: "8px",
+                          }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="grid grid-cols-2 gap-2 mt-4">
+                      {agentDistribution.map((item, index) => (
+                        <div key={index} className="flex items-center space-x-2">
+                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+                          <span className="text-sm text-slate-300">
+                            {item.name}: {item.value}
+                          </span>
+                        </div>
                       ))}
-                    </Pie>
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "#1e293b",
-                        border: "1px solid #334155",
-                        borderRadius: "8px",
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="grid grid-cols-2 gap-2 mt-4">
-                  {agentDistribution.map((item, index) => (
-                    <div key={index} className="flex items-center space-x-2">
-                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                      <span className="text-sm text-slate-300">{item.name}</span>
                     </div>
-                  ))}
-                </div>
+                  </>
+                ) : (
+                  <div className="h-300 flex items-center justify-center text-slate-400">
+                    No agents currently active
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
 
-          {/* Quantum Status Grid */}
+          {/* System Status Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card className="bg-gradient-to-br from-blue-900/50 to-purple-900/50 border-blue-500/30 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="text-blue-300">Quantum Entanglement</CardTitle>
+                <CardTitle className="text-blue-300">Network Status</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-300">Coherence Level</span>
-                    <span className="text-blue-400 font-bold">{realtimeData.quantumCoherence}%</span>
+                    <span className="text-slate-300">Network Health</span>
+                    <span className="text-blue-400 font-bold">{realtimeData.quantumCoherence.toFixed(1)}%</span>
                   </div>
                   <Progress value={realtimeData.quantumCoherence} className="h-2" />
-                  <div className="text-xs text-slate-400">
-                    Quantum states synchronized across {realtimeData.agentCount} agents
-                  </div>
+                  <div className="text-xs text-slate-400">{realtimeData.activeConnections} active connections</div>
                 </div>
               </CardContent>
             </Card>
 
             <Card className="bg-gradient-to-br from-green-900/50 to-blue-900/50 border-green-500/30 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="text-green-300">Neural Network</CardTitle>
+                <CardTitle className="text-green-300">Task Processing</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-300">Synaptic Activity</span>
-                    <span className="text-green-400 font-bold">98.7%</span>
+                    <span className="text-slate-300">Success Rate</span>
+                    <span className="text-green-400 font-bold">
+                      {stats.total > 0 ? ((stats.completed / stats.total) * 100).toFixed(1) : 0}%
+                    </span>
                   </div>
-                  <Progress value={98.7} className="h-2" />
+                  <Progress value={stats.total > 0 ? (stats.completed / stats.total) * 100 : 0} className="h-2" />
                   <div className="text-xs text-slate-400">
-                    {realtimeData.messagesPerSecond} neural transmissions/sec
+                    {stats.completed} completed / {stats.total} total
                   </div>
                 </div>
               </CardContent>
@@ -307,11 +408,15 @@ export function QuantumCommandCenter() {
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-300">Threat Level</span>
-                    <span className="text-red-400 font-bold">MINIMAL</span>
+                    <span className="text-slate-300">Security Status</span>
+                    <span
+                      className={`font-bold ${systemHealth ? getHealthColor(systemHealth.components.security.status) : "text-gray-400"}`}
+                    >
+                      {systemHealth?.components.security.status.toUpperCase() || "UNKNOWN"}
+                    </span>
                   </div>
                   <Progress value={realtimeData.securityLevel} className="h-2" />
-                  <div className="text-xs text-slate-400">All systems secured and monitored</div>
+                  <div className="text-xs text-slate-400">All systems monitored</div>
                 </div>
               </CardContent>
             </Card>
@@ -321,7 +426,7 @@ export function QuantumCommandCenter() {
         <TabsContent value="agents">
           <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
             <CardHeader>
-              <CardTitle className="text-blue-400">Agent Swarm Visualization</CardTitle>
+              <CardTitle className="text-blue-400">Agent Swarm Status</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="h-96 bg-gradient-to-br from-slate-900 to-blue-900 rounded-lg p-4 relative overflow-hidden">
@@ -329,14 +434,25 @@ export function QuantumCommandCenter() {
                 <div className="relative z-10 h-full flex items-center justify-center">
                   <div className="text-center">
                     <div className="w-32 h-32 mx-auto mb-4 relative">
-                      <div className="absolute inset-0 rounded-full bg-blue-500/20 animate-pulse" />
-                      <div className="absolute inset-2 rounded-full bg-blue-500/40 animate-ping" />
-                      <div className="absolute inset-4 rounded-full bg-blue-500 flex items-center justify-center">
+                      <div
+                        className={`absolute inset-0 rounded-full ${isActive ? "bg-blue-500/20 animate-pulse" : "bg-gray-500/20"}`}
+                      />
+                      <div
+                        className={`absolute inset-2 rounded-full ${isActive ? "bg-blue-500/40 animate-ping" : "bg-gray-500/40"}`}
+                      />
+                      <div
+                        className={`absolute inset-4 rounded-full ${isActive ? "bg-blue-500" : "bg-gray-500"} flex items-center justify-center`}
+                      >
                         <Brain className="h-12 w-12 text-white" />
                       </div>
                     </div>
-                    <p className="text-blue-400 text-lg font-semibold">{realtimeData.agentCount} Agents Active</p>
-                    <p className="text-slate-400 text-sm">Quantum-entangled neural network</p>
+                    <p className="text-blue-400 text-lg font-semibold">
+                      {realtimeData.agentCount} Agents {isActive ? "Active" : "Standby"}
+                    </p>
+                    <p className="text-slate-400 text-sm">
+                      {agents.filter((a) => a.status === "active").length} active,{" "}
+                      {agents.filter((a) => a.status === "idle").length} idle
+                    </p>
                   </div>
                 </div>
               </div>
@@ -379,28 +495,35 @@ export function QuantumCommandCenter() {
                 <div>
                   <div className="flex justify-between mb-2">
                     <span className="text-slate-300">CPU Usage</span>
-                    <span className="text-red-400">{realtimeData.systemLoad}%</span>
+                    <span className="text-red-400">{realtimeData.systemLoad.toFixed(1)}%</span>
                   </div>
                   <Progress value={realtimeData.systemLoad} className="h-2" />
                 </div>
                 <div>
                   <div className="flex justify-between mb-2">
                     <span className="text-slate-300">Memory Usage</span>
-                    <span className="text-yellow-400">67%</span>
+                    <span className="text-yellow-400">
+                      {performanceMonitor.getAverageMetric("heap_used", 60000)?.toFixed(1) || 0}%
+                    </span>
                   </div>
-                  <Progress value={67} className="h-2" />
+                  <Progress value={performanceMonitor.getAverageMetric("heap_used", 60000) || 0} className="h-2" />
                 </div>
                 <div>
                   <div className="flex justify-between mb-2">
-                    <span className="text-slate-300">Network I/O</span>
-                    <span className="text-green-400">34%</span>
+                    <span className="text-slate-300">Network Latency</span>
+                    <span className="text-green-400">
+                      {performanceMonitor.getAverageMetric("network_rtt", 60000)?.toFixed(0) || 0}ms
+                    </span>
                   </div>
-                  <Progress value={34} className="h-2" />
+                  <Progress
+                    value={Math.min((performanceMonitor.getAverageMetric("network_rtt", 60000) || 0) / 10, 100)}
+                    className="h-2"
+                  />
                 </div>
                 <div>
                   <div className="flex justify-between mb-2">
-                    <span className="text-slate-300">Quantum Coherence</span>
-                    <span className="text-purple-400">{realtimeData.quantumCoherence}%</span>
+                    <span className="text-slate-300">Network Health</span>
+                    <span className="text-purple-400">{realtimeData.quantumCoherence.toFixed(1)}%</span>
                   </div>
                   <Progress value={realtimeData.quantumCoherence} className="h-2" />
                 </div>
@@ -419,68 +542,82 @@ export function QuantumCommandCenter() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-green-900/20 rounded-lg border border-green-500/30">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-2 h-2 rounded-full bg-green-400" />
-                    <span className="text-green-300">Firewall</span>
-                  </div>
-                  <Badge variant="outline" className="border-green-500 text-green-400">
-                    ACTIVE
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-green-900/20 rounded-lg border border-green-500/30">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-2 h-2 rounded-full bg-green-400" />
-                    <span className="text-green-300">Encryption</span>
-                  </div>
-                  <Badge variant="outline" className="border-green-500 text-green-400">
-                    AES-256
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-green-900/20 rounded-lg border border-green-500/30">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-2 h-2 rounded-full bg-green-400" />
-                    <span className="text-green-300">Authentication</span>
-                  </div>
-                  <Badge variant="outline" className="border-green-500 text-green-400">
-                    SECURE
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-yellow-900/20 rounded-lg border border-yellow-500/30">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-2 h-2 rounded-full bg-yellow-400" />
-                    <span className="text-yellow-300">Intrusion Detection</span>
-                  </div>
-                  <Badge variant="outline" className="border-yellow-500 text-yellow-400">
-                    MONITORING
-                  </Badge>
-                </div>
+                {systemHealth &&
+                  Object.entries(systemHealth.components).map(([key, component]: [string, any]) => (
+                    <div
+                      key={key}
+                      className={`flex items-center justify-between p-3 rounded-lg border ${
+                        component.status === "healthy"
+                          ? "bg-green-900/20 border-green-500/30"
+                          : component.status === "warning"
+                            ? "bg-yellow-900/20 border-yellow-500/30"
+                            : "bg-red-900/20 border-red-500/30"
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div
+                          className={`w-2 h-2 rounded-full ${
+                            component.status === "healthy"
+                              ? "bg-green-400"
+                              : component.status === "warning"
+                                ? "bg-yellow-400"
+                                : "bg-red-400"
+                          }`}
+                        />
+                        <span className={`${getHealthColor(component.status)} capitalize`}>
+                          {key.replace("_", " ")}
+                        </span>
+                      </div>
+                      <Badge
+                        variant="outline"
+                        className={`${
+                          component.status === "healthy"
+                            ? "border-green-500 text-green-400"
+                            : component.status === "warning"
+                              ? "border-yellow-500 text-yellow-400"
+                              : "border-red-500 text-red-400"
+                        }`}
+                      >
+                        {component.status.toUpperCase()}
+                      </Badge>
+                    </div>
+                  ))}
               </CardContent>
             </Card>
 
             <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="text-orange-400">Threat Analysis</CardTitle>
+                <CardTitle className="text-orange-400">System Overview</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="text-center">
-                    <div className="text-4xl font-bold text-green-400 mb-2">0</div>
-                    <div className="text-slate-400">Active Threats</div>
+                    <div
+                      className={`text-4xl font-bold mb-2 ${
+                        systemHealth?.alerts?.filter((a: any) => !a.resolved).length === 0
+                          ? "text-green-400"
+                          : "text-yellow-400"
+                      }`}
+                    >
+                      {systemHealth?.alerts?.filter((a: any) => !a.resolved).length || 0}
+                    </div>
+                    <div className="text-slate-400">Active Alerts</div>
                   </div>
                   <div className="grid grid-cols-2 gap-4 text-center">
                     <div>
-                      <div className="text-2xl font-bold text-blue-400">247</div>
-                      <div className="text-xs text-slate-400">Blocked Attempts</div>
+                      <div className="text-2xl font-bold text-blue-400">{systemHealth?.metrics.uptime || 0}</div>
+                      <div className="text-xs text-slate-400">Uptime (ms)</div>
                     </div>
                     <div>
-                      <div className="text-2xl font-bold text-purple-400">99.9%</div>
-                      <div className="text-xs text-slate-400">Uptime</div>
+                      <div className="text-2xl font-bold text-purple-400">{systemHealth?.metrics.activeUsers || 0}</div>
+                      <div className="text-xs text-slate-400">Active Users</div>
                     </div>
                   </div>
                   <div className="pt-4 border-t border-slate-700">
-                    <div className="text-sm text-slate-300 mb-2">Last Security Scan</div>
-                    <div className="text-xs text-slate-400">2 minutes ago - All systems secure</div>
+                    <div className="text-sm text-slate-300 mb-2">System Status</div>
+                    <div className={`text-xs ${getHealthColor(systemHealth?.overall || "unknown")}`}>
+                      {systemHealth?.overall?.toUpperCase() || "CHECKING..."}
+                    </div>
                   </div>
                 </div>
               </CardContent>
