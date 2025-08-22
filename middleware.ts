@@ -1,29 +1,4 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { Ratelimit } from "@upstash/ratelimit"
-import { Redis } from "@upstash/redis"
-
-const redis = new Redis({
-  url: process.env.KV_REST_API_URL!,
-  token: process.env.KV_REST_API_TOKEN!,
-})
-
-const ratelimit = new Ratelimit({
-  redis: redis,
-  limiter: Ratelimit.slidingWindow(10, "10 s"),
-  analytics: false, // Disabled analytics to prevent pipeline conflicts
-})
-
-const apiRatelimit = new Ratelimit({
-  redis: redis,
-  limiter: Ratelimit.slidingWindow(100, "1 m"),
-  analytics: false,
-})
-
-const quantumRatelimit = new Ratelimit({
-  redis: redis,
-  limiter: Ratelimit.slidingWindow(5, "1 m"),
-  analytics: false,
-})
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -50,36 +25,6 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  try {
-    let limit
-    if (pathname.startsWith("/api/quantum") || pathname.startsWith("/api/consciousness")) {
-      limit = await quantumRatelimit.limit(ip)
-    } else if (pathname.startsWith("/api/")) {
-      limit = await apiRatelimit.limit(ip)
-    } else {
-      limit = await ratelimit.limit(ip)
-    }
-
-    if (!limit.success) {
-      return new NextResponse("Rate limit exceeded", {
-        status: 429,
-        headers: {
-          "X-RateLimit-Limit": limit.limit.toString(),
-          "X-RateLimit-Remaining": limit.remaining.toString(),
-          "X-RateLimit-Reset": new Date(limit.reset).toISOString(),
-          "Retry-After": Math.round((limit.reset - Date.now()) / 1000).toString(),
-        },
-      })
-    }
-
-    response.headers.set("X-RateLimit-Limit", limit.limit.toString())
-    response.headers.set("X-RateLimit-Remaining", limit.remaining.toString())
-    response.headers.set("X-RateLimit-Reset", new Date(limit.reset).toISOString())
-  } catch (error) {
-    console.error("[v0] Rate limiting error:", error)
-    // Continue without rate limiting if Redis fails
-  }
-
   if (
     pathname.startsWith("/api/quantum") ||
     pathname.startsWith("/api/consciousness") ||
@@ -92,16 +37,8 @@ export async function middleware(request: NextRequest) {
       return new NextResponse("API key required", { status: 401 })
     }
 
-    // Validate API key format and existence
     if (!isValidApiKey(apiKey)) {
       return new NextResponse("Invalid API key", { status: 403 })
-    }
-
-    try {
-      await logApiAccess(ip, pathname, apiKey, request.method)
-    } catch (error) {
-      console.error("[v0] API access logging error:", error)
-      // Continue without logging if Redis fails
     }
   }
 
@@ -111,7 +48,7 @@ export async function middleware(request: NextRequest) {
 function isValidApiKey(apiKey: string): boolean {
   if (!apiKey || apiKey.length < 32) return false
 
-  // In production, check against database or environment variables
+  // In production, check against environment variables
   const validKeys = [
     process.env.QUANTUM_API_KEY,
     process.env.CONSCIOUSNESS_API_KEY,
@@ -120,20 +57,6 @@ function isValidApiKey(apiKey: string): boolean {
   ].filter(Boolean)
 
   return validKeys.includes(apiKey)
-}
-
-async function logApiAccess(ip: string, path: string, apiKey: string, method: string) {
-  const logEntry = JSON.stringify({
-    timestamp: Date.now(),
-    ip,
-    path,
-    method,
-    apiKey: apiKey.substring(0, 8) + "..." + apiKey.substring(apiKey.length - 4),
-    userAgent: "quantum-consciousness-system",
-  })
-
-  await redis.lpush("api_access_log", logEntry)
-  await redis.ltrim("api_access_log", 0, 999)
 }
 
 export const config = {
