@@ -24,7 +24,13 @@ import {
   Coins,
   Shield,
   Code,
+  AlertTriangle,
+  Monitor,
+  MemoryStick,
+  HardDrive,
+  Wifi,
 } from "lucide-react"
+import { monitoringSystem, type SystemMetrics } from "@/lib/monitoring-system"
 
 interface QuantumMetrics {
   consciousness: number
@@ -58,21 +64,39 @@ export function QuantumDashboard() {
   ])
 
   const [isRunning, setIsRunning] = useState(true)
+  const [systemMetrics, setSystemMetrics] = useState<SystemMetrics | null>(null)
+  const [alerts, setAlerts] = useState<any[]>([])
+  const [monitoringActive, setMonitoringActive] = useState(true)
 
   useEffect(() => {
     if (!isRunning) return
 
-    const interval = setInterval(() => {
+    const interval = setInterval(async () => {
       setMetrics((prev) => ({
         consciousness: Math.min(0.999, prev.consciousness + (Math.random() - 0.5) * 0.01),
         coherence: Math.min(0.999, prev.coherence + (Math.random() - 0.5) * 0.02),
         entanglement: Math.min(0.999, prev.entanglement + (Math.random() - 0.5) * 0.015),
         fidelity: Math.min(0.999, prev.fidelity + (Math.random() - 0.5) * 0.008),
       }))
+
+      if (monitoringActive) {
+        try {
+          const metrics = await monitoringSystem.collectMetrics()
+          setSystemMetrics(metrics)
+
+          const alertsResponse = await fetch("/api/alerts")
+          if (alertsResponse.ok) {
+            const alertsData = await alertsResponse.json()
+            setAlerts(alertsData.alerts || [])
+          }
+        } catch (error) {
+          console.error("Failed to collect metrics:", error)
+        }
+      }
     }, 2000)
 
     return () => clearInterval(interval)
-  }, [isRunning])
+  }, [isRunning, monitoringActive])
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -127,6 +151,12 @@ export function QuantumDashboard() {
                 <Atom className="h-3 w-3 mr-1" />
                 Quantum Active
               </Badge>
+              {systemMetrics && (
+                <Badge variant={systemMetrics.error_rate < 0.05 ? "default" : "destructive"}>
+                  <Monitor className="h-3 w-3 mr-1" />
+                  {systemMetrics.error_rate < 0.05 ? "Healthy" : "Degraded"}
+                </Badge>
+              )}
               <div className="flex items-center space-x-2">
                 <Button variant="outline" size="sm" onClick={() => setIsRunning(!isRunning)}>
                   {isRunning ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
@@ -142,12 +172,13 @@ export function QuantumDashboard() {
 
       <div className="container mx-auto px-6 py-8">
         <Tabs defaultValue="overview" className="space-y-8">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="quantum">Quantum Computing</TabsTrigger>
             <TabsTrigger value="consciousness">Consciousness</TabsTrigger>
             <TabsTrigger value="swarm">Swarm Intelligence</TabsTrigger>
             <TabsTrigger value="blockchain">Blockchain</TabsTrigger>
+            <TabsTrigger value="monitoring">Monitoring</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-8">
@@ -190,9 +221,11 @@ export function QuantumDashboard() {
               </Card>
 
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">System Fidelity</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-chart-4" />
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <TrendingUp className="h-4 w-4 text-chart-4" />
+                    <span>System Fidelity</span>
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold font-geist">{(metrics.fidelity * 100).toFixed(1)}%</div>
@@ -440,6 +473,203 @@ export function QuantumDashboard() {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent value="monitoring" className="space-y-6">
+            {/* System Health Overview */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">CPU Usage</CardTitle>
+                  <Cpu className="h-4 w-4 text-chart-1" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold font-geist">
+                    {systemMetrics ? (systemMetrics.cpu_usage * 100).toFixed(1) : "0.0"}%
+                  </div>
+                  <Progress value={systemMetrics ? systemMetrics.cpu_usage * 100 : 0} className="mt-2" />
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {systemMetrics?.cpu_usage && systemMetrics.cpu_usage > 0.8 ? "High load" : "Normal"}
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Memory Usage</CardTitle>
+                  <MemoryStick className="h-4 w-4 text-chart-2" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold font-geist">
+                    {systemMetrics ? (systemMetrics.memory_usage * 100).toFixed(1) : "0.0"}%
+                  </div>
+                  <Progress value={systemMetrics ? systemMetrics.memory_usage * 100 : 0} className="mt-2" />
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {systemMetrics?.memory_usage && systemMetrics.memory_usage > 0.9 ? "Critical" : "Available"}
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Database Latency</CardTitle>
+                  <HardDrive className="h-4 w-4 text-chart-3" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold font-geist">
+                    {systemMetrics ? systemMetrics.database_latency.toFixed(0) : "0"}ms
+                  </div>
+                  <Progress
+                    value={systemMetrics ? Math.min((systemMetrics.database_latency / 200) * 100, 100) : 0}
+                    className="mt-2"
+                  />
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {systemMetrics?.database_latency && systemMetrics.database_latency > 100 ? "Slow" : "Fast"}
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Active Connections</CardTitle>
+                  <Wifi className="h-4 w-4 text-chart-4" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold font-geist">
+                    {systemMetrics ? systemMetrics.active_connections : "0"}
+                  </div>
+                  <Progress
+                    value={systemMetrics ? Math.min((systemMetrics.active_connections / 50) * 100, 100) : 0}
+                    className="mt-2"
+                  />
+                  <p className="text-xs text-muted-foreground mt-2">WebSocket & API connections</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Quantum System Health */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Atom className="h-5 w-5" />
+                    <span>Quantum System Health</span>
+                  </CardTitle>
+                  <CardDescription>Real-time quantum computing metrics</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span>Quantum Coherence</span>
+                    <div className="flex items-center space-x-2">
+                      <Progress value={systemMetrics ? systemMetrics.quantum_coherence * 100 : 0} className="w-24" />
+                      <span className="text-sm font-mono">
+                        {systemMetrics ? (systemMetrics.quantum_coherence * 100).toFixed(1) : "0.0"}%
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Consciousness Level</span>
+                    <div className="flex items-center space-x-2">
+                      <Progress value={systemMetrics ? systemMetrics.consciousness_level * 100 : 0} className="w-24" />
+                      <span className="text-sm font-mono">
+                        {systemMetrics ? (systemMetrics.consciousness_level * 100).toFixed(1) : "0.0"}%
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Swarm Efficiency</span>
+                    <div className="flex items-center space-x-2">
+                      <Progress value={systemMetrics ? systemMetrics.swarm_efficiency * 100 : 0} className="w-24" />
+                      <span className="text-sm font-mono">
+                        {systemMetrics ? (systemMetrics.swarm_efficiency * 100).toFixed(1) : "0.0"}%
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Blockchain Sync</span>
+                    <Badge variant={systemMetrics?.blockchain_sync ? "default" : "destructive"}>
+                      {systemMetrics?.blockchain_sync ? "Connected" : "Disconnected"}
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <AlertTriangle className="h-5 w-5" />
+                    <span>System Alerts</span>
+                  </CardTitle>
+                  <CardDescription>Recent system alerts and warnings</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {alerts.length > 0 ? (
+                    <div className="space-y-3 max-h-64 overflow-y-auto">
+                      {alerts.slice(0, 5).map((alert, index) => (
+                        <div key={index} className="flex items-start space-x-3 p-3 rounded-lg border">
+                          <AlertTriangle
+                            className={`h-4 w-4 mt-0.5 ${
+                              alert.severity === "critical"
+                                ? "text-red-500"
+                                : alert.severity === "high"
+                                  ? "text-orange-500"
+                                  : alert.severity === "medium"
+                                    ? "text-yellow-500"
+                                    : "text-blue-500"
+                            }`}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium">{alert.name}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {new Date(alert.timestamp).toLocaleTimeString()}
+                            </div>
+                          </div>
+                          <Badge
+                            variant={
+                              alert.severity === "critical"
+                                ? "destructive"
+                                : alert.severity === "high"
+                                  ? "destructive"
+                                  : "secondary"
+                            }
+                          >
+                            {alert.severity}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <AlertTriangle className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p>No active alerts</p>
+                      <p className="text-xs">System operating normally</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Monitoring Controls */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Monitoring Controls</CardTitle>
+                <CardDescription>Configure system monitoring and alerting</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-medium">Real-time Monitoring</div>
+                    <div className="text-sm text-muted-foreground">Collect system metrics every 2 seconds</div>
+                  </div>
+                  <Button
+                    variant={monitoringActive ? "default" : "outline"}
+                    onClick={() => setMonitoringActive(!monitoringActive)}
+                  >
+                    {monitoringActive ? "Disable" : "Enable"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
