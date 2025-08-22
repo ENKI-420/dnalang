@@ -2,7 +2,7 @@
   "compilerOptions": {
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
-    "target": "ES2022",
+    "target": "ES6",
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
@@ -19,18 +19,9 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"],
-      "@/quantum/*": ["./lib/quantum/*"],
-      "@/dna/*": ["./lib/dna/*"],
-      "@/organisms/*": ["./organisms/*"],
-      "@/consciousness/*": ["./lib/consciousness/*"],
-      "@/qnet/*": ["./lib/qnet/*"]
-    },
-    "baseUrl": ".",
-    "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true
+      "@/*": ["./*"]
+    }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "**/*.dna"],
-  "exclude": ["node_modules", "scripts/*.py", "scripts/*.sh"]
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
 }

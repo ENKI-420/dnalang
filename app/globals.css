@@ -1,175 +1,128 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@import "tw-animate-css";
 
-@layer base {
-  :root {
-    /* Updated to refined rose-based color palette from design brief for premium feel */
-    --background: 0 0% 100%;
-    --foreground: 215 16% 47%;
-    --card: 327 73% 97%;
-    --card-foreground: 215 16% 47%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 215 16% 47%;
-    --primary: 347 77% 50%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 327 73% 97%;
-    --secondary-foreground: 215 16% 47%;
-    --muted: 220 14% 96%;
-    --muted-foreground: 215 25% 27%;
-    --accent: 330 81% 60%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 347 77% 50%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 220 13% 91%;
-    --input: 327 73% 97%;
-    --ring: 347 77% 50%;
-    --radius: 0.5rem;
+@custom-variant dark (&:is(.dark *));
 
-    /* Enhanced chart colors for quantum data visualization with rose theme */
-    --chart-1: 347 77% 50%;
-    --chart-2: 330 81% 60%;
-    --chart-3: 45 93% 47%;
-    --chart-4: 262 83% 58%;
-    --chart-5: 347 87% 43%;
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(0.97 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.6 0.2 270);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.556 0 0);
+  --muted-foreground: oklch(0.985 0 0);
+  --accent: oklch(0.6 0.2 270);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.85 0 0);
+  --input: oklch(0.97 0 0);
+  --ring: oklch(0.6 0.2 270 / 0.5);
+  --chart-1: oklch(0.55 0.25 260);
+  --chart-2: oklch(0.6 0.25 290);
+  --chart-3: oklch(0.65 0.25 320);
+  --chart-4: oklch(0.7 0.25 45);
+  --chart-5: oklch(0.65 0.25 140);
+  --radius: 0.5rem;
+  --sidebar: oklch(0.97 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.6 0.2 270);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.55 0.25 260);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(0.85 0 0);
+  --sidebar-ring: oklch(0.6 0.2 270 / 0.5);
+}
 
-    /* Updated sidebar colors to match new rose theme */
-    --sidebar-background: 327 73% 97%;
-    --sidebar-foreground: 215 16% 47%;
-    --sidebar-primary: 347 77% 50%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 330 81% 60%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 347 77% 50%;
+.dark {
+  --background: oklch(0.08 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.12 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.12 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.6 0.2 270);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.2 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.2 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.6 0.2 270);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.2 0 0);
+  --input: oklch(0.2 0 0);
+  --ring: oklch(0.6 0.2 270 / 0.5);
+  --chart-1: oklch(0.55 0.25 260);
+  --chart-2: oklch(0.6 0.25 290);
+  --chart-3: oklch(0.65 0.25 320);
+  --chart-4: oklch(0.7 0.25 45);
+  --chart-5: oklch(0.65 0.25 140);
+  --sidebar: oklch(0.1 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.6 0.2 270);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.55 0.25 260);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(0.2 0 0);
+  --sidebar-ring: oklch(0.6 0.2 270 / 0.5);
+}
 
-    /* Added quantum-specific design tokens for enhanced theming with rose palette */
-    --quantum-glow: 330 81% 60%;
-    --consciousness-primary: 347 77% 50%;
-    --dna-helix: 330 81% 60%;
-    --neural-network: 45 93% 47%;
-  }
-
-  .dark {
-    /* Added dark mode support with rose-based dark theme */
-    --background: 224 71% 4%;
-    --foreground: 213 31% 91%;
-    --card: 224 71% 4%;
-    --card-foreground: 213 31% 91%;
-    --popover: 224 71% 4%;
-    --popover-foreground: 213 31% 91%;
-    --primary: 347 77% 50%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 215 27% 17%;
-    --secondary-foreground: 213 31% 91%;
-    --muted: 215 27% 17%;
-    --muted-foreground: 217 10% 65%;
-    --accent: 330 81% 60%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 213 31% 91%;
-    --border: 215 27% 17%;
-    --input: 215 27% 17%;
-    --ring: 347 77% 50%;
-    --sidebar-background: 224 71% 4%;
-    --sidebar-foreground: 213 31% 91%;
-    --sidebar-primary: 347 77% 50%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 330 81% 60%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 215 27% 17%;
-    --sidebar-ring: 347 77% 50%;
-  }
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
 }
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
-    /* Enhanced quantum-inspired background pattern with rose tones */
-    background-image: radial-gradient(circle at 25% 25%, hsl(330 81% 60% / 0.03) 0%, transparent 50%),
-      radial-gradient(circle at 75% 75%, hsl(347 77% 50% / 0.03) 0%, transparent 50%);
   }
 }
 
-/* Enhanced progress indicators with new rose quantum theme colors */
-.progress-indicator-quantum {
-  background: linear-gradient(90deg, hsl(347 77% 50%), hsl(330 81% 60%));
-}
-
-.progress-indicator-consciousness {
-  background: linear-gradient(90deg, hsl(330 81% 60%), hsl(45 93% 47%));
-}
-
-.progress-indicator-dna {
-  background: linear-gradient(90deg, hsl(45 93% 47%), hsl(347 77% 50%));
-}
-
-/* Added sophisticated glass morphism and quantum animation effects with rose theme */
-.glass-morphism {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.quantum-gradient-primary {
-  background: linear-gradient(135deg, hsl(347 77% 50%), hsl(330 81% 60%));
-}
-
-.interactive-element {
-  transition: all 0.2s ease-in-out;
-}
-
-.interactive-element:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.card-hover {
-  transition: all 0.2s ease-in-out;
-}
-
-.card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-}
-
-.focus-ring {
-  @apply focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
-}
-
-.page-transition {
-  animation: fadeIn 0.3s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.skeleton {
-  background: linear-gradient(90deg, hsl(327 73% 97%) 25%, hsl(220 13% 91%) 50%, hsl(327 73% 97%) 75%);
-  background-size: 200% 100%;
-  animation: skeleton-loading 1.5s infinite;
-}
-
-@keyframes skeleton-loading {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
-}
-
+/* Custom quantum animations */
 @keyframes quantum-pulse {
   0%,
   100% {
@@ -177,7 +130,7 @@
     transform: scale(1);
   }
   50% {
-    opacity: 0.8;
+    opacity: 0.7;
     transform: scale(1.05);
   }
 }
@@ -194,22 +147,20 @@
   }
 }
 
-@keyframes dna-helix-rotate {
+@keyframes data-stream {
   0% {
-    transform: rotate(0deg);
+    transform: translateY(0);
+    opacity: 0;
   }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes neural-network-pulse {
-  0%,
-  100% {
-    opacity: 0.6;
-  }
-  50% {
+  10% {
     opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100px);
+    opacity: 0;
   }
 }
 
@@ -218,72 +169,11 @@
 }
 
 .consciousness-flow {
-  background: linear-gradient(-45deg, hsl(347 77% 50%), hsl(330 81% 60%), hsl(45 93% 47%), hsl(347 77% 50%));
+  background: linear-gradient(-45deg, var(--chart-1), var(--chart-2), var(--chart-3), var(--chart-4));
   background-size: 400% 400%;
-  animation: consciousness-flow 3s ease infinite;
+  animation: consciousness-flow 4s ease infinite;
 }
 
-.dna-helix-rotate {
-  animation: dna-helix-rotate 4s linear infinite;
-}
-
-.neural-network-pulse {
-  animation: neural-network-pulse 2s ease-in-out infinite;
-}
-
-/* Added premium micro-interactions and enhanced visual effects */
-.premium-card {
-  @apply glass-morphism rounded-xl border border-border/20 shadow-lg;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.premium-card:hover {
-  @apply shadow-2xl;
-  transform: translateY(-4px) scale(1.02);
-  border-color: hsl(var(--primary) / 0.3);
-}
-
-.quantum-button {
-  @apply relative overflow-hidden;
-  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
-}
-
-.quantum-button::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s;
-}
-
-.quantum-button:hover::before {
-  left: 100%;
-}
-
-.consciousness-indicator {
-  position: relative;
-  overflow: hidden;
-}
-
-.consciousness-indicator::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(45deg, transparent 30%, hsl(var(--primary) / 0.1) 50%, transparent 70%);
-  animation: consciousness-sweep 2s infinite;
-}
-
-@keyframes consciousness-sweep {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
+.data-stream {
+  animation: data-stream 3s linear infinite;
 }
