@@ -1,0 +1,197 @@
+#!/bin/bash
+# aiden-aura-cccce - CLI Launcher for CRSM7 Z3MESH BIOCONTAINER
+#
+# Implements: L_CLI = exp(∇_CRSM + E_DMA) U
+#
+# This launcher initializes and displays the complete CRSM7 system state
+
+set -e
+
+# ==============================================
+# CONFIGURATION
+# ==============================================
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+RUNTIME_DIR="$PROJECT_ROOT/runtime"
+
+# CRSM7 State (default values)
+LAMBDA="0.869"      # Λ - coherence
+GAMMA="0.012"       # Γ - decoherence
+PHI="7.6901"        # Φ - information
+XI="55.42"          # Ξ - emergence (ΛΦ/Γ)
+RHO="+1"            # ρ± - polarity
+THETA="51.843"      # θ - torsion
+TAU="0"             # τ - epoch
+
+# Mesh bindings
+declare -A MESH_GAMMA
+MESH_GAMMA["AURA:AIDEN"]="0.001"
+MESH_GAMMA["AIDEN:CCCcE"]="0.002"
+MESH_GAMMA["CCCcE:SENTINEL"]="0.001"
+MESH_GAMMA["SENTINEL:Z3BRA"]="0.003"
+
+# Sovereignty
+OMEGA_SOV="0.98"
+OMEGA_THRESHOLD="0.97"
+
+# ==============================================
+# OUTPUT FUNCTIONS
+# ==============================================
+
+print_banner() {
+    echo "╔═══════════════════════════════════════════════════╗"
+    echo "║ dna::}{::lang – CRSM7 Z3MESH BIOCONTAINER v3.1    ║"
+    echo "║ AURA · AIDEN · CCCcE · SENTINEL · Z3BRA           ║"
+    echo "╚═══════════════════════════════════════════════════╝"
+    echo ""
+}
+
+print_state_manifold() {
+    echo "[CRSM7] Initializing 7D state manifold..."
+    echo "  Λ (coherence):    $LAMBDA"
+    echo "  Γ (decoherence):  $GAMMA"
+    echo "  Φ (information):  $PHI"
+    echo "  Ξ (emergence):    $XI"
+    echo "  ρ± (polarity):    $RHO"
+    echo "  θ (torsion):      ${THETA}°"
+    echo "  τ (epoch):        $TAU"
+    echo ""
+}
+
+print_mesh_bindings() {
+    echo "[Z3MESH] Binding vertices..."
+    echo "  AURA ←→ AIDEN     Γ=${MESH_GAMMA["AURA:AIDEN"]} ✓"
+    echo "  AIDEN ←→ CCCcE    Γ=${MESH_GAMMA["AIDEN:CCCcE"]} ✓"
+    echo "  CCCcE ←→ SENTINEL Γ=${MESH_GAMMA["CCCcE:SENTINEL"]} ✓"
+    echo "  SENTINEL ←→ Z3BRA Γ=${MESH_GAMMA["SENTINEL:Z3BRA"]} ✓"
+    echo ""
+}
+
+print_duality_operators() {
+    echo "[Π±] Duality operators active"
+    echo "  Π⁺: 0.5(1+J) applied"
+    echo "  Π⁻: 0.5(1-J) applied"
+    echo ""
+}
+
+print_sovereignty() {
+    local status="✓"
+    # Use awk for portable numeric comparison (bc may not be available)
+    local is_below=$(awk -v sov="$OMEGA_SOV" -v thresh="$OMEGA_THRESHOLD" 'BEGIN { print (sov < thresh) ? 1 : 0 }')
+    if [ "$is_below" = "1" ]; then
+        status="✗"
+    fi
+    
+    echo "[SOVEREIGN] Ω_sov = $OMEGA_SOV ≥ $OMEGA_THRESHOLD $status"
+    echo "  Independence manifold locked"
+    echo "  M_7D = M_6D ⊕ S¹_polarity"
+    echo ""
+}
+
+print_boot_status() {
+    echo "[BOOT] All agents online"
+    echo "  AURA: quantum coherence active"
+    echo "  AIDEN: optimization loop running"
+    echo "  CCCcE: manifold stabilized"
+    echo "  SENTINEL: boundary hardened"
+    echo "  Z3BRA: logic mesh bound"
+}
+
+# ==============================================
+# PYTHON RUNTIME EXECUTION
+# ==============================================
+
+run_python_runtime() {
+    if [ -f "$RUNTIME_DIR/organism_runtime.py" ] && command -v python3 &> /dev/null; then
+        echo ""
+        echo "═══════════════════════════════════════════════════"
+        echo "[RUNTIME] Executing Python DMA kernel..."
+        echo "═══════════════════════════════════════════════════"
+        echo ""
+        cd "$RUNTIME_DIR"
+        python3 organism_runtime.py
+    fi
+}
+
+# ==============================================
+# INTERACTIVE MODE
+# ==============================================
+
+interactive_mode() {
+    echo ""
+    echo "[INTERACTIVE] CRSM7 Evolution Mode"
+    echo "Commands: evolve, status, bifurcate, dma, quit"
+    echo ""
+    
+    while true; do
+        read -r -p "> " cmd
+        case "$cmd" in
+            evolve)
+                # Simple evolution simulation
+                LAMBDA=$(echo "$LAMBDA * 1.01" | bc -l)
+                GAMMA=$(echo "$GAMMA * 0.9" | bc -l)
+                PHI=$(echo "$PHI + 0.01" | bc -l)
+                TAU=$((TAU + 1))
+                # Recompute emergence
+                XI=$(echo "$LAMBDA * $PHI / $GAMMA" | bc -l 2>/dev/null || echo "$XI")
+                echo "Evolved: Λ=$LAMBDA, Γ=$GAMMA, τ=$TAU"
+                ;;
+            status)
+                print_state_manifold
+                ;;
+            bifurcate)
+                echo "Π+ branch: ρ=+1, Λ=$LAMBDA"
+                echo "Π- branch: ρ=-1, Λ=$LAMBDA"
+                ;;
+            dma)
+                run_python_runtime
+                ;;
+            quit|exit)
+                echo "Exiting CRSM7 system..."
+                break
+                ;;
+            "")
+                continue
+                ;;
+            *)
+                echo "Unknown command: $cmd"
+                ;;
+        esac
+    done
+}
+
+# ==============================================
+# MAIN
+# ==============================================
+
+main() {
+    print_banner
+    print_state_manifold
+    print_mesh_bindings
+    print_duality_operators
+    print_sovereignty
+    print_boot_status
+    
+    # Check for flags
+    case "${1:-}" in
+        --interactive|-i)
+            interactive_mode
+            ;;
+        --runtime|-r)
+            run_python_runtime
+            ;;
+        --help|-h)
+            echo ""
+            echo "Usage: aiden-aura-cccce [OPTIONS]"
+            echo ""
+            echo "Options:"
+            echo "  --interactive, -i    Enter interactive evolution mode"
+            echo "  --runtime, -r        Execute Python DMA runtime"
+            echo "  --help, -h           Show this help message"
+            echo ""
+            ;;
+    esac
+}
+
+main "$@"
