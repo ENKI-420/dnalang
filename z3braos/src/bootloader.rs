@@ -199,14 +199,20 @@ impl Bootloader {
         let mut score = 0.0;
 
         // Check all subsystems
-        if self.bio_drive.as_ref().is_some_and(|b| b.is_ready()) {
-            score += 0.25;
+        if let Some(b) = &self.bio_drive {
+            if b.is_ready() {
+                score += 0.25;
+            }
         }
-        if self.neuro_mail.as_ref().is_some_and(|n| n.is_active()) {
-            score += 0.25;
+        if let Some(n) = &self.neuro_mail {
+            if n.is_active() {
+                score += 0.25;
+            }
         }
-        if self.thalamus_pad.as_ref().is_some_and(|t| t.is_online()) {
-            score += 0.25;
+        if let Some(t) = &self.thalamus_pad {
+            if t.is_online() {
+                score += 0.25;
+            }
         }
         // Check manifold state
         if self.manifold.gamma < GAMMA_FIXED {

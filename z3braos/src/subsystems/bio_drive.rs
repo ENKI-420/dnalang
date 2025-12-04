@@ -66,11 +66,16 @@ impl BioDrive {
         }
     }
 
-    /// Simple hash function for file data
+    /// FNV-1a hash function for file data
+    /// This is a fast, well-distributed non-cryptographic hash suitable for content addressing
     fn hash_data(data: &[u8]) -> u64 {
-        let mut hash: u64 = 0;
-        for (i, &byte) in data.iter().enumerate() {
-            hash = hash.wrapping_add(u64::from(byte).wrapping_mul((i as u64).wrapping_add(1)));
+        const FNV_OFFSET_BASIS: u64 = 14695981039346656037;
+        const FNV_PRIME: u64 = 1099511628211;
+        
+        let mut hash = FNV_OFFSET_BASIS;
+        for &byte in data {
+            hash ^= u64::from(byte);
+            hash = hash.wrapping_mul(FNV_PRIME);
         }
         hash
     }

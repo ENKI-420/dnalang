@@ -4,6 +4,8 @@
 //!
 //! Route_7D(i→j) = ∇_mesh7D(x_i−x_j) + sin(θ_i−φ_j) + ΛΦ/(Γ_i+Γ_j) + |χ_i−χ_j|
 
+use std::collections::HashSet;
+
 use crate::constants::LAMBDA_PHI;
 use crate::manifold::Node7D;
 
@@ -33,6 +35,8 @@ pub fn find_path(nodes: &[Node7D], source: usize, target: usize) -> Vec<usize> {
     }
 
     let mut path = vec![source];
+    let mut visited: HashSet<usize> = HashSet::new();
+    visited.insert(source);
     let mut current = source;
 
     // Greedy path finding - always move toward target
@@ -41,7 +45,7 @@ pub fn find_path(nodes: &[Node7D], source: usize, target: usize) -> Vec<usize> {
         let mut best_cost = f64::MAX;
 
         for (idx, node) in nodes.iter().enumerate() {
-            if idx != current && !path.contains(&idx) {
+            if idx != current && !visited.contains(&idx) {
                 let cost = route_7d(&nodes[current], node) + route_7d(node, &nodes[target]);
                 if cost < best_cost {
                     best_cost = cost;
@@ -51,6 +55,7 @@ pub fn find_path(nodes: &[Node7D], source: usize, target: usize) -> Vec<usize> {
         }
 
         path.push(best_next);
+        visited.insert(best_next);
         current = best_next;
     }
 

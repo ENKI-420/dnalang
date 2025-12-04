@@ -110,9 +110,9 @@ impl NeuroMail {
     /// deliver = route ∘ synapse_gap
     pub fn deliver(&mut self) -> usize {
         let mut delivered_count = 0;
-        let signals: Vec<Signal> = self.queue.drain(..).collect();
-
-        for mut signal in signals {
+        let mut requeue = Vec::new();
+        
+        while let Some(mut signal) = self.queue.pop() {
             if let Some(next_hop) = self.route(&signal) {
                 let _gap = self.synapse_gap(1.0);
                 signal.tau += 0.001; // Increment temporal epoch
@@ -123,10 +123,13 @@ impl NeuroMail {
                 } else {
                     // Multi-hop: update source and re-queue
                     signal.source = next_hop;
-                    self.queue.push(signal);
+                    requeue.push(signal);
                 }
             }
         }
+        
+        // Re-queue signals that need additional hops
+        self.queue.extend(requeue);
 
         delivered_count
     }
