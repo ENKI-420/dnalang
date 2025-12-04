@@ -46,7 +46,8 @@ class CRSM7State:
         if self.gamma > GAMMA_TOLERANCE:
             self.xi = (self.lambda_ * self.phi) / self.gamma
         else:
-            self.xi = float('inf')
+            # When Γ → 0, cap emergence at a large finite value for numerical stability
+            self.xi = 1e12
         return self.xi
     
     def as_tuple(self) -> Tuple[float, ...]:

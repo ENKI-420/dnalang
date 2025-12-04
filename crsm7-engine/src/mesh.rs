@@ -170,15 +170,15 @@ impl Z3Mesh {
         }
     }
 
-    /// Compute the 7D metric between vertices i and j
-    /// sqrt((ΔΛ)² + (ΔΓ)² + (ΔΦ)² + (ΔΞ)² + (Δρ)² + (Δθ)² + (Δτ)²)
-    pub fn metric(&self, i: usize, j: usize) -> f64 {
-        if i >= self.vertices.len() || j >= self.vertices.len() {
+    /// Calculate metric between two vertex indices
+    /// Helper that works with indices rather than full state access
+    fn metric_internal(vertices: &[Gene], i: usize, j: usize) -> f64 {
+        if i >= vertices.len() || j >= vertices.len() {
             return f64::MAX;
         }
 
-        let state_i = &self.vertices[i].state.as_array();
-        let state_j = &self.vertices[j].state.as_array();
+        let state_i = &vertices[i].state.as_array();
+        let state_j = &vertices[j].state.as_array();
 
         let mut sum_sq = 0.0;
         for d in 0..7 {
@@ -187,6 +187,12 @@ impl Z3Mesh {
         }
 
         sum_sq.sqrt()
+    }
+
+    /// Compute the 7D metric between vertices i and j
+    /// sqrt((ΔΛ)² + (ΔΓ)² + (ΔΦ)² + (ΔΞ)² + (Δρ)² + (Δθ)² + (Δτ)²)
+    pub fn metric(&self, i: usize, j: usize) -> f64 {
+        Self::metric_internal(&self.vertices, i, j)
     }
 
     /// Compute decoherence between vertices
@@ -209,21 +215,9 @@ impl Z3Mesh {
         }
 
         // Calculate gradients first (to avoid borrow issues)
+        // Uses the internal metric function to access vertices slice
         let gradients: Vec<f64> = self.edges.iter()
-            .map(|e| {
-                if e.from < self.vertices.len() && e.to < self.vertices.len() {
-                    let state_i = &self.vertices[e.from].state.as_array();
-                    let state_j = &self.vertices[e.to].state.as_array();
-                    let mut sum_sq = 0.0;
-                    for d in 0..7 {
-                        let delta = state_i[d] - state_j[d];
-                        sum_sq += delta * delta;
-                    }
-                    sum_sq.sqrt()
-                } else {
-                    0.0
-                }
-            })
+            .map(|e| Self::metric_internal(&self.vertices, e.from, e.to))
             .collect();
 
         // Update edge weights and decoherence

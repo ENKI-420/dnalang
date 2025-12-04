@@ -22,6 +22,11 @@ from dma_kernel import (
 import math
 
 
+# Constants for equilibrium/collapse conditions
+LAMBDA_MAX_THRESHOLD = 0.99  # λ threshold for equilibrium
+LAMBDA_PHI_MAX_THRESHOLD = 10.0  # ΛΦ threshold for sealing
+
+
 @dataclass
 class Organism:
     """DNA Organism container
@@ -184,7 +189,7 @@ class OrganismRuntime:
         
         # Check ΛΦ = max
         lambda_phi = organism.state.lambda_ * organism.state.phi
-        if organism.state.lambda_ > 0.99 and lambda_phi > 10.0:
+        if organism.state.lambda_ > LAMBDA_MAX_THRESHOLD and lambda_phi > LAMBDA_PHI_MAX_THRESHOLD:
             results["lambda_phi_max"] = True
             results["sealed"] = True
         

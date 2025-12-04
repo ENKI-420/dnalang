@@ -77,7 +77,9 @@ print_duality_operators() {
 
 print_sovereignty() {
     local status="✓"
-    if (( $(echo "$OMEGA_SOV < $OMEGA_THRESHOLD" | bc -l 2>/dev/null || echo "0") )); then
+    # Use awk for portable numeric comparison (bc may not be available)
+    local is_below=$(awk -v sov="$OMEGA_SOV" -v thresh="$OMEGA_THRESHOLD" 'BEGIN { print (sov < thresh) ? 1 : 0 }')
+    if [ "$is_below" = "1" ]; then
         status="✗"
     fi
     

@@ -20,6 +20,9 @@ pub const EMERGENCE_THRESHOLD: f64 = 7.0;
 /// Decoherence tolerance
 pub const GAMMA_TOLERANCE: f64 = 1e-9;
 
+/// Maximum emergence value (for numerical stability when Γ → 0)
+pub const EMERGENCE_MAX: f64 = 1e12;
+
 /// 7-dimensional CRSM State Vector
 ///
 /// | Field | Meaning                |
@@ -91,8 +94,8 @@ impl CRSM7State {
         if self.gamma > GAMMA_TOLERANCE {
             self.xi = (self.lambda * self.phi) / self.gamma;
         } else {
-            // When Γ → 0, emergence approaches infinity (capped for numerical stability)
-            self.xi = f64::MAX;
+            // When Γ → 0, cap emergence at a large finite value for numerical stability
+            self.xi = EMERGENCE_MAX;
         }
     }
 

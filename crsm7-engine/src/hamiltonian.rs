@@ -8,6 +8,15 @@ use crate::duality::DualityOperator;
 use crate::state::{CRSM7State, THETA_CRITICAL};
 use serde::{Deserialize, Serialize};
 
+/// Threshold for near-zero gamma (equilibrium check)
+const GAMMA_EQUILIBRIUM_THRESHOLD: f64 = 1e-6;
+
+/// Lambda threshold for equilibrium
+const LAMBDA_MAX_THRESHOLD: f64 = 0.99;
+
+/// Phi threshold for equilibrium
+const PHI_MAX_THRESHOLD: f64 = 10.0;
+
 /// CRSM Hamiltonian operator
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CRSMHamiltonian {
@@ -80,8 +89,8 @@ impl CRSMHamiltonian {
     /// Check if system is at equilibrium
     /// C' = 0 ⟺ Γ = 0, ΛΦ = max
     pub fn is_equilibrium(&self, state: &CRSM7State) -> bool {
-        let gamma_zero = state.gamma < 1e-6;
-        let lambda_phi_max = state.lambda > 0.99 && state.phi > 10.0;
+        let gamma_zero = state.gamma < GAMMA_EQUILIBRIUM_THRESHOLD;
+        let lambda_phi_max = state.lambda > LAMBDA_MAX_THRESHOLD && state.phi > PHI_MAX_THRESHOLD;
         gamma_zero && lambda_phi_max
     }
 
