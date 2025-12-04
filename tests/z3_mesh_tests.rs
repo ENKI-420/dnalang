@@ -7,7 +7,10 @@
 //! - Mesh evolution
 //! - det(g_A) > 0 (metric positivity)
 
-/// Critical torsion angle
+/// Critical torsion angle (51.843°)
+/// Note: This constant is duplicated here because this test file
+/// is designed to be compiled standalone without library dependencies.
+/// In production code, use the constant from runtime/src/manifold/crsm7.rs
 const THETA_CRITICAL: f64 = 51.843;
 
 /// Decoherence tolerance

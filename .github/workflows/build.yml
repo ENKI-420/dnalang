@@ -15,6 +15,8 @@ jobs:
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ matrix.rust }}
 
       - name: Install Node
         uses: actions/setup-node@v4
