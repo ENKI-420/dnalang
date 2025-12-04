@@ -29,6 +29,10 @@ next-env.d.ts
 # Rust build artifacts
 /crsm7-engine/target/
 /crsm7-engine/Cargo.lock
+/compiler/target/
+/compiler/Cargo.lock
+/runtime/target/
+/runtime/Cargo.lock
 
 # Python cache
 __pycache__/

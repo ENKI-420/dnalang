@@ -1,0 +1,53 @@
+name: ΩΩ∞-pipeline
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust: [stable]
+        node: [20]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Build crsm7-engine
+        run: cargo build --manifest-path crsm7-engine/Cargo.toml
+
+      - name: Build compiler
+        run: cargo build --manifest-path compiler/Cargo.toml
+
+      - name: Build runtime
+        run: cargo build --manifest-path runtime/Cargo.toml
+
+      - name: Test crsm7-engine
+        run: cargo test --manifest-path crsm7-engine/Cargo.toml
+
+      - name: Test compiler
+        run: cargo test --manifest-path compiler/Cargo.toml
+
+      - name: Test runtime
+        run: cargo test --manifest-path runtime/Cargo.toml
+
+      - name: Run standalone tests
+        run: |
+          rustc --test tests/crsm7_projector_tests.rs -o /tmp/projector_tests && /tmp/projector_tests
+          rustc --test tests/duality_bifurcation_tests.rs -o /tmp/duality_tests && /tmp/duality_tests
+          rustc --test tests/sovereignty_collapse_tests.rs -o /tmp/sovereignty_tests && /tmp/sovereignty_tests
+          rustc --test tests/z3_mesh_tests.rs -o /tmp/mesh_tests && /tmp/mesh_tests
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Build Next.js app
+        run: npm run build
