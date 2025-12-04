@@ -25,3 +25,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Rust
+/z3braos/target/
+**/*.rs.bk
+Cargo.lock

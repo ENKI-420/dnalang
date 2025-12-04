@@ -1,0 +1,9 @@
+[package]
+name = "z3braos"
+version = "9.0.0"
+edition = "2021"
+description = "Z3braOS-Quantum Edition v9.0.CRSM7D - Self-evolving organismal operating system"
+authors = ["Z3braOS Collective"]
+
+[dependencies]
+num-complex = "0.4"
