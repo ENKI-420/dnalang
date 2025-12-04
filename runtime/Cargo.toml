@@ -1,0 +1,16 @@
+[package]
+name = "dnalang-runtime"
+version = "3.1.0"
+edition = "2021"
+authors = ["ENKI-420 <enki420@dnalang.org>"]
+description = "Runtime for dna::}{::lang and 7dCRSM::}{::lang with dual execution model"
+license = "MIT"
+repository = "https://github.com/ENKI-420/dnalang"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+[lib]
+name = "dnalang_runtime"
+path = "src/lib.rs"

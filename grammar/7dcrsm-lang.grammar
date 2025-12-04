@@ -1,0 +1,16 @@
+grammar 7dCRSM::}{::lang
+
+<manifold>     ::= "manifold" IDENT "{" <m_body> "}" ;
+<m_body>       ::= <state> <hamiltonian> <constraint>* ;
+
+<state>        ::= "state" IDENT "=" "(" IDENT ("," IDENT)* ")" ;
+<hamiltonian>  ::= "law" IDENT ":" <h_terms> ;
+<h_terms>      ::= <term> ( <term> )* ;
+<term>         ::= IDENT IDENT
+                 | "-" IDENT
+                 | "+" IDENT IDENT ;
+
+<constraint>   ::= "constraint:" <integral> ;
+<integral>     ::= "∫" IDENT IDENT IDENT "=" NUMBER ;
+
+<operator>     ::= "operator" IDENT ;

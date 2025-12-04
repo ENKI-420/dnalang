@@ -1,0 +1,28 @@
+grammar dna::}{::lang
+
+<program>      ::= <organism>* ;
+
+<organism>     ::= "organism" IDENT "{" <body> "}" ;
+<body>         ::= (<field> | <gene> | <evolve> | <collapse>)* ;
+
+<field>        ::= "field" IDENT ":" IDENT ;
+<gene>         ::= "gene" IDENT "{" <gene_body> "}" ;
+<gene_body>    ::= <expr>* ;
+
+<expr>         ::= "emit" STRING
+                 | "bifurcate" IDENT
+                 | "sovereign"
+                 | IDENT "(" <expr_list>? ")"
+                 | IDENT ;
+
+<expr_list>    ::= <expr> ("," <expr>)* ;
+
+<evolve>       ::= "evolve" "{" <ode>* "}" ;
+<ode>          ::= "∂τ" <state_tuple> "=" <rhs> ;
+<state_tuple>  ::= "(" IDENT ("," IDENT)* ")" ;
+<rhs>          ::= IDENT "(" <expr_list>? ")" ;
+
+<collapse>     ::= "collapse" "{" <collapse_rule>* "}" ;
+<collapse_rule>::= "if" <cond> IDENT ;
+<cond>         ::= IDENT "<=" IDENT
+                 | IDENT "→" NUMBER ;
